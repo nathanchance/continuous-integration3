@@ -1,0 +1,33 @@
+name: build kernels
+on: workflow_dispatch
+jobs:
+  build_arm64:
+    name: Build and boot arm64 defconfig
+    runs-on: self-hosted
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: arm64 defconfig
+      run: |
+        docker run \
+          --pull always \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/scripts/driver.py -a arm64 -k defconfig
+  build_x86_64:
+    name: Build and boot x86_64 defconfig
+    runs-on: self-hosted
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: x86_64 defconfig
+      run: |
+        docker run \
+          --pull always \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/scripts/driver.py -a x86_64 -k defconfig
