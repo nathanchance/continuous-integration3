@@ -1,0 +1,48 @@
+name: build kernels
+on: workflow_dispatch
+jobs:
+  build_arm64_allmodconfig:
+    name: Build and boot arm64 allmodconfig
+    runs-on: [self-hosted, big]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: arm64 allmodconfig
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm64 -k allmodconfig
+  build_arm64_defconfig:
+    name: Build and boot arm64 defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: arm64 defconfig
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm64 -b -k defconfig
+  build_x86_64:
+    name: Build and boot x86_64 defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: x86_64 defconfig
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a x86_64 -b -k defconfig
