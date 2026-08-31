@@ -1,0 +1,11 @@
+[Unit]
+Description=Update %f
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/git -C %f remote update --prune
+User=git
+
+[Install]
+WantedBy=multi-user.target

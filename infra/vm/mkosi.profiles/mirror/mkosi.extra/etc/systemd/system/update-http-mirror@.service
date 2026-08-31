@@ -1,0 +1,11 @@
+[Unit]
+Description=Update %i in /srv/http
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/mirror.py update %i
+User=http
+
+[Install]
+WantedBy=multi-user.target

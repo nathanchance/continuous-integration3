@@ -1,0 +1,6 @@
+[Unit]
+Description=Prune dangling podman images older than a week
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/podman image prune --filter until=168h --force

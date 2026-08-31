@@ -1,0 +1,3 @@
+enable git-daemon.socket
+enable serve-http-mirror.service
+enable weekly@prune-http-mirror.timer

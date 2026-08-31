@@ -1,0 +1,11 @@
+[Unit]
+Description=Serve /srv/http over HTTP
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 -m http.server --bind 0.0.0.0 --directory /srv/http 8080
+Restart=always
+User=http
+
+[Install]
+WantedBy=multi-user.target

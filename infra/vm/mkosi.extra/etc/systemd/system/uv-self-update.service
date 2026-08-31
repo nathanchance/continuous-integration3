@@ -1,0 +1,7 @@
+[Unit]
+Description=Run uv self update
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/uv self update
+User=root
