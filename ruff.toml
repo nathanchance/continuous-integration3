@@ -41,6 +41,11 @@ ignore = [
     'start-process-with-partial-path',
     'subprocess-without-shell-equals-true',
     'suspicious-subprocess-import',
+    # these two XML warnings are irrelevant for Python >= 3.11
+    # https://github.com/python/cpython/pull/135294
+    # https://github.com/astral-sh/ruff/issues/23999#issuecomment-4096649210
+    'suspicious-xml-etree-import',
+    'suspicious-xml-element-tree-usage',
     'too-many-arguments',
     'too-many-branches',
     'too-many-locals',
