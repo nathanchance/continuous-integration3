@@ -1,0 +1,12 @@
+[Unit]
+Description=Weekly timer for %i.service
+
+[Timer]
+OnCalendar=weekly
+AccuracySec=15m
+RandomizedDelaySec=2h
+Persistent=true
+Unit=%i.service
+
+[Install]
+WantedBy=timers.target

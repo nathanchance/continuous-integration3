@@ -1,0 +1,12 @@
+[Unit]
+Description=Run %i.service every 15 minutes
+
+[Timer]
+OnCalendar=*:0/15
+AccuracySec=30s
+RandomizedDelaySec=5m
+Persistent=true
+Unit=%i.service
+
+[Install]
+WantedBy=timers.target

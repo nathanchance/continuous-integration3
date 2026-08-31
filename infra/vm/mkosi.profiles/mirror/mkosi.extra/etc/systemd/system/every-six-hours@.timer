@@ -1,0 +1,12 @@
+[Unit]
+Description=Run %i.service every six hours
+
+[Timer]
+OnCalendar=0/6:0:0
+AccuracySec=5m
+RandomizedDelaySec=90m
+Persistent=true
+Unit=%i.service
+
+[Install]
+WantedBy=timers.target

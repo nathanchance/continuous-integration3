@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+set -eux
+
+: "$HOST_SSH_PUB_KEY"
+
+umask 0077
+echo "$HOST_SSH_PUB_KEY" >/root/.ssh/authorized_keys

@@ -1,0 +1,11 @@
+[Unit]
+Description=Prune /srv/http
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/mirror.py prune
+User=http
+
+[Install]
+WantedBy=multi-user.target

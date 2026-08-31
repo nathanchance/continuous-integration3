@@ -1,0 +1,17 @@
+[Unit]
+Description=ghcr.io registry cache
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+ContainerName=ghcr-io-registry
+Image=docker.io/library/registry:latest
+PublishPort=5000:5000
+Volume=ghcr-io-registry:/var/lib/registry
+Environment=REGISTRY_PROXY_REMOTEURL=https://ghcr.io
+
+[Service]
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target default.target

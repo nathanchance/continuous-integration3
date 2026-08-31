@@ -1,0 +1,11 @@
+[Unit]
+Description=grok-dump-pull %f
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/grok-dumb-pull %f
+User=git
+
+[Install]
+WantedBy=multi-user.target
