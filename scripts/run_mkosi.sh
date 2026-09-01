@@ -6,7 +6,11 @@ ci_root=$(readlink -f "$(dirname "$0")/..")
 mkosi_cache=$ci_root/.mkosi.cache
 mkosi_src=$ci_root/.mkosi.git
 mkosi_tools=$ci_root/.mkosi.tools
-mkosi=(uvx --from "$mkosi_src" mkosi)
+if [ -z "${GITHUB_ACTIONS:-}" ]; then
+    mkosi=(uvx --from "$mkosi_src" mkosi)
+else
+    mkosi=(mkosi)
+fi
 
 if [ $# -lt 1 ]; then
     echo "[-] ERROR: Missing directory name as first argument!" 2>&1
