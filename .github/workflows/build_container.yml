@@ -1,0 +1,37 @@
+name: build and push runner container image
+on:
+  push:
+    paths:
+      - .github/workflows/build_container.yml
+      - runner/env
+      - runner/build_container_image.sh
+      - runner/push_container_image.sh
+  workflow_dispatch:
+    inputs:
+      push_image:
+        description: 'Push image to ghcr.io'
+        required: false
+        type: boolean
+
+jobs:
+  build_and_push_container_image:
+    name: Build and push runner container image
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v7
+
+      - name: Setup mkosi
+        uses: systemd/mkosi@main
+
+      - name: Build container image
+        run: runner/build_container_image.sh
+
+      - name: Push container image
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.push_image == 'true' }}
+        run: runner/push_container_image.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
