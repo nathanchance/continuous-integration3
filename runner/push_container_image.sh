@@ -27,5 +27,6 @@ fi
 
 echo "[+] Uploading ${output##*/} to $ghcr_namespace"
 ghcr_image=docker://"$ghcr_namespace"/"${output##*/}"
-skopeo copy oci:"$output" "$ghcr_image":latest
-skopeo copy "$ghcr_image":latest "$ghcr_image":"$(date +'%Y-%m-%d-%H-%M')"
+image_date=$(date +'%Y-%m-%d-%H-%M')
+skopeo copy oci:"$output" "$ghcr_image":"$image_date"
+skopeo copy "$ghcr_image":"$image_date" "$ghcr_image":"$image_date"
