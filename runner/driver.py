@@ -80,6 +80,8 @@ class Runner:
         self.tree: str = ''
         self.verbose: bool = False
 
+        self._boot_utils_arch: str = ''
+
         self._make_vars: dict[str, str] = {'LLVM': '1', 'LLVM_IAS': '1'}
         self._toolchain_prefix: Path = Path()
         self._source_path: Path = Path()
@@ -137,6 +139,9 @@ class Runner:
         if not self.boot:
             return
 
+        if not self._boot_utils_arch:
+            self._boot_utils_arch = self.arch
+
         gh_releases_json_url = f"{MIRROR_HTTP}/boot-utils/releases.json"
         gh_releases_json = Path(gh_releases_json_url.replace(MIRROR_HTTP, ''))
         (result := requests.get(gh_releases_json_url, timeout=15)).raise_for_status()
@@ -147,7 +152,7 @@ class Runner:
         boot_qemu_py_cmd = [
             boot_qemu_py,
             '-a',
-            self.arch,
+            self._boot_utils_arch,
             '--gh-json-file',
             gh_releases_json,
             '-k',
