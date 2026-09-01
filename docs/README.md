@@ -65,21 +65,13 @@ Each build server runs...
     ```
     machinectl shell --uid=cbl-admin
     ```
-4. Build and upload initial container image
+4. Build virtual machine images
     ```
     cd continuous-integration3 &&
-    runner/push_container_image.sh
-    ```
-    When prompted to log into `ghcr.io`, use your username and the classic token created for ghcr.io uploads above.
-
-    To perform subsequent updates, run `runner/build_container_image.sh --force` to regenerate the image before running the `push` script above. This should eventually be automated entirely with GitHub Actions but it was out of scope for the initial proof of concept.
-
-5. Build virtual machine images
-    ```
     infra/build_base_builder_vm_image.sh &&
     infra/build_mirror_vm_image.sh
     ```
-6. Create virtual machines using `infra/vmm.py`
+5. Create virtual machines using `infra/vmm.py`
     ```
     run0 infra/vmm.py create -m -n 2 -b 1
     ```
@@ -95,7 +87,7 @@ Each build server runs...
     ```
     /opt/mirror.py setup && exit
     ```
-    This may take a while.
+    Downloading all content may take a while.
 
 ### Demonstration video
 
