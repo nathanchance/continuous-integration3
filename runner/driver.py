@@ -173,6 +173,12 @@ class Runner:
 def main() -> None:
     args = parse_arguments()
 
+    try:
+        subprocess.run(['systemd-detect-virt', '-c'], capture_output=True, check=True, text=True)
+    except subprocess.CalledProcessError as err:
+        msg = f"Not running driver.py in a container? systemd-detect-virt shows '{err.stdout.strip()}'"
+        raise RuntimeError(msg) from err
+
     runner = Runner()
     runner.arch = args.arch
     runner.boot = args.boot
