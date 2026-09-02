@@ -215,6 +215,8 @@ def install_packages() -> None:
         'ovmf',
         'qemu-system',
         'virt-install',
+        # mirror.py
+        'curl',
         # push_container_image.sh
         'skopeo',
         # vmm.py
