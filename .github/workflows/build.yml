@@ -1,13 +1,13 @@
 name: build kernels
 on: workflow_dispatch
 jobs:
-  build_arm64_allmodconfig:
-    name: Build and boot arm64 allmodconfig
-    runs-on: [self-hosted, big]
+  build_arm_multi_v5_defconfig:
+    name: Build and boot arm multi_v5_defconfig
+    runs-on: [self-hosted, normal]
     steps:
     - name: Clone repository
       uses: actions/checkout@v7
-    - name: arm64 allmodconfig
+    - name: arm multi_v5_defconfig
       run: |
         podman run \
           --pull newer \
@@ -15,7 +15,40 @@ jobs:
           --tty \
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
-          /work/runner/driver.py -a arm64 -k allmodconfig
+          /work/runner/driver.py -a arm -b -k multi_v5_defconfig
+
+  build_arm_aspeed_g5_defconfig:
+    name: Build and boot arm aspeed_g5_defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: arm aspeed_g5_defconfig
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm -b -k aspeed_g5_defconfig
+
+  build_arm_multi_v7_defconfig:
+    name: Build and boot arm multi_v7_defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: arm multi_v7_defconfig
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm -b -k multi_v7_defconfig
+
   build_arm64_defconfig:
     name: Build and boot arm64 defconfig
     runs-on: [self-hosted, normal]
@@ -31,7 +64,136 @@ jobs:
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
           /work/runner/driver.py -a arm64 -b -k defconfig
-  build_x86_64:
+
+  build_i386_defconfig:
+    name: Build and boot i386 defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: i386 defconfig
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a i386 -b -k defconfig
+
+  build_loongarch_defconfig:
+    name: Build and boot loongarch defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: loongarch defconfig
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a loongarch -b -k defconfig
+
+  build_mips_malta_defconfig:
+    name: Build and boot mips malta_defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: mips malta_defconfig
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a mips -b -k malta_defconfig
+
+  build_mips_malta_defconfig_be:
+    name: Build and boot mips malta_defconfig (big endian)
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: mips malta_defconfig (big endian)
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a mips -b -k malta_defconfig CONFIG_CPU_BIG_ENDIAN=y
+
+  build_powerpc_ppc64_guest_defconfig:
+    name: Build and boot powerpc ppc64_guest_defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: powerpc ppc64_guest_defconfig
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a powerpc -b -k ppc64_guest_defconfig
+
+  build_powerpc_powernv_defconfig:
+    name: Build and boot powerpc powernv_defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: powerpc powernv_defconfig
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a powerpc -b -k powernv_defconfig
+
+  build_riscv_defconfig:
+    name: Build and boot riscv defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: riscv defconfig
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a riscv -b -k defconfig
+
+  build_s390_defconfig:
+    name: Build and boot s390 defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: s390 defconfig
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a s390 -b -k defconfig
+
+  build_x86_64_defconfig:
     name: Build and boot x86_64 defconfig
     runs-on: [self-hosted, normal]
     steps:
@@ -46,3 +208,51 @@ jobs:
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
           /work/runner/driver.py -a x86_64 -b -k defconfig
+
+  build_arm64_allmodconfig:
+    name: Build and boot arm64 allmodconfig
+    runs-on: [self-hosted, big]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: arm64 allmodconfig
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm64 -k allmodconfig
+
+  build_x86_64_allmodconfig:
+    name: Build and boot x86_64 allmodconfig
+    runs-on: [self-hosted, big]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: x86_64 allmodconfig
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a x86_64 -k allmodconfig
+
+  build_x86_64_archlinux:
+    name: Build and boot x86_64 Arch Linux configuration
+    runs-on: [self-hosted, big]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: x86_64 Arch Linux
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a x86_64 -b -k https://github.com/ClangBuiltLinux/linux_pkgbuild/raw/main/config.x86_64
