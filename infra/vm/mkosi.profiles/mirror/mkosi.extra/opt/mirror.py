@@ -79,6 +79,7 @@ def update_korg_llvm() -> None:
     for tarball in llvm_releases.values():
         if (tarball_dst := llvm_releases_json.parent.joinpath(tarball)).exists():
             print(f"[-] {tarball} already downloaded, skipping...")
+            continue
         tarball_url = f"https://mirrors.kernel.org/pub/tools/llvm/files/{tarball}"
         print(f"[+] Downloading {tarball_url} to {tarball_dst}")
         subprocess.run(['curl', '-fLSs', '-o', tarball_dst, tarball_url], check=True)
