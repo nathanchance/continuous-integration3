@@ -12,6 +12,7 @@ import subprocess
 import sys
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from pathlib import Path
+from typing import Any
 
 import requests
 import tuxmake.build
@@ -81,12 +82,21 @@ class Runner:
         self.verbose: bool = False
 
         self._boot_utils_arch: str = ''
-
-        self._make_vars: dict[str, str] = {'LLVM': '1', 'LLVM_IAS': '1'}
-        self._toolchain_prefix: Path = Path()
-        self._source_path: Path = Path()
         self._boot_utils_path: Path = Path()
-        self._output_path: Path = Path('/output')
+        self._tuxmake_kwargs: dict[str, Any] = {
+            'build_dir': Path('/build'),
+            'kconfig': '',
+            'kconfig_add': [],
+            'kernel_image': None,
+            'make_variables': {'LLVM': '1', 'LLVM_IAS': '1'},
+            'output_dir': Path('/output'),
+            'target_arch': '',
+            'targets': [],
+            'toolchain': 'clang',
+            'tree': Path(),
+            'verbose': False,
+        }
+        self._toolchain_prefix: Path = Path()
 
     def _prepare_toolchain(self) -> None:
         # Fetch latest available toolchains from mirror VM
@@ -110,7 +120,7 @@ class Runner:
         )
 
     def _prepare_git(self) -> None:
-        self._source_path = clone_mirror_repo(self.tree)
+        self._tuxmake_kwargs['tree'] = clone_mirror_repo(self.tree)
         if self.boot:
             self._boot_utils_path = clone_mirror_repo('boot-utils')
 
@@ -120,19 +130,12 @@ class Runner:
         os.environ['PATH'] = f"{self._toolchain_prefix}/bin:{os.environ['PATH']}"
 
         print('[+] Calling tuxmake to build kernel')
-        result = tuxmake.build.build(
-            build_dir=Path('/build'),
-            kconfig=self.kconfigs[0],
-            kconfig_add=self.kconfigs[1:],
-            make_variables=self._make_vars,
-            output_dir=self._output_path,
-            target_arch=self.arch,
-            targets=['kernel' if self.boot else 'default'],
-            toolchain='clang',
-            tree=self._source_path,
-            verbose=self.verbose,
-        )
-        if result.failed:
+        self._tuxmake_kwargs['kconfig'] = self.kconfigs[0]
+        self._tuxmake_kwargs['kconfig_add'] += self.kconfigs[1:]
+        self._tuxmake_kwargs['target_arch'] = self.arch
+        self._tuxmake_kwargs['targets'].insert(0, 'kernel' if self.boot else 'default')
+        self._tuxmake_kwargs['verbose'] = self.verbose
+        if tuxmake.build.build(**self._tuxmake_kwargs).failed:
             sys.exit(1)
 
     def _boot(self) -> None:
@@ -156,7 +159,7 @@ class Runner:
             '--gh-json-file',
             gh_releases_json,
             '-k',
-            self._output_path,
+            self._tuxmake_kwargs['output_dir'],
         ]
         print(f"$ {' '.join(str(x) for x in boot_qemu_py_cmd)}")
         subprocess.run(boot_qemu_py_cmd, check=True)
@@ -175,6 +178,42 @@ class Runner:
         self._boot()
 
 
+class ARMRunner(Runner):
+    def _boot(self) -> None:
+        if 'multi_v5_defconfig' in self.kconfigs:
+            self._boot_utils_arch = 'arm32_v5'
+        if 'aspeed_g5_defconfig' in self.kconfigs:
+            self._boot_utils_arch = 'arm32_v6'
+        super()._boot()
+
+    def _build(self) -> None:
+        if 'multi_v5_defconfig' in self.kconfigs or 'aspeed_g5_defconfig' in self.kconfigs:
+            self._tuxmake_kwargs['targets'].append('dtbs')
+        super()._build()
+
+
+class MipsRunner(Runner):
+    def _boot(self) -> None:
+        self._boot_utils_arch = 'mips' if 'CONFIG_CPU_BIG_ENDIAN=y' in self.kconfigs else 'mipsel'
+        super()._boot()
+
+    def _build(self) -> None:
+        self._tuxmake_kwargs['kernel_image'] = 'vmlinux'
+        super()._build()
+
+
+class PowerPCRunner(Runner):
+    def _boot(self) -> None:
+        self._boot_utils_arch = 'ppc64' if 'ppc64_guest_defconfig' in self.kconfigs else 'ppc64le'
+        super()._boot()
+
+    def _build(self) -> None:
+        self._tuxmake_kwargs['kernel_image'] = (
+            'vmlinux' if 'ppc64_guest_defconfig' in self.kconfigs else 'zImage.epapr'
+        )
+        super()._build()
+
+
 def main() -> None:
     args = parse_arguments()
 
@@ -184,7 +223,12 @@ def main() -> None:
         msg = f"Not running driver.py in a container? systemd-detect-virt shows '{err.stdout.strip()}'"
         raise RuntimeError(msg) from err
 
-    runner = Runner()
+    arch_runners = {
+        'arm': ARMRunner,
+        'mips': MipsRunner,
+        'powerpc': PowerPCRunner,
+    }
+    runner: Runner = arch_runners.get(args.arch, Runner)()
     runner.arch = args.arch
     runner.boot = args.boot
     runner.kconfigs = args.kconfigs
