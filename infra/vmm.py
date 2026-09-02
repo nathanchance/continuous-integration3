@@ -241,7 +241,7 @@ def create_vm(
     subprocess.run(virt_install_cmd, check=True)
 
     if skip_ssh:
-        print('[-] Skipping ssh session')
+        print('[-] Skipping initial ssh setup session')
     elif initial_setup_cmd:
         limit = 45
         interval = 5
