@@ -207,6 +207,7 @@ def install_packages() -> None:
         'fish',
         'ripgrep',
         'tmux',
+        'vim',
         # libvirt
         'acl',
         'libvirt-clients',
