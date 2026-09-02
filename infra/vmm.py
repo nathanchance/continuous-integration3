@@ -1,5 +1,12 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script --quiet
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "requests>=2.34.2",
+# ]
+# ///
 
+import getpass
 import os
 import re
 import shutil
@@ -9,6 +16,8 @@ import sys
 import time
 from argparse import ArgumentParser
 from pathlib import Path
+
+import requests
 
 HOSTNAME = socket.gethostname()
 ADMIN_HOME = Path('/home/cbl-admin')
@@ -51,6 +60,12 @@ def parse_arguments():
     )
 
     delete_parser = subparsers.add_parser('delete', help='Delete virtual machines')
+    delete_parser.add_argument(
+        '-d',
+        '--deregister',
+        action='store_true',
+        help='Deregister virtual machines with GitHub upon deletion',
+    )
     delete_parser.add_argument('vms', nargs='*', help='Virtual machines to delete')
 
     recreate_parser = subparsers.add_parser('recreate', help='Recreate existing virtual machine')
@@ -67,6 +82,13 @@ def parse_arguments():
     group = update_parser.add_mutually_exclusive_group()
     group.add_argument('-a', '--all', action='store_true', help='Update all machines')
     group.add_argument('-m', '--machines', nargs='+', help='Update specified machines')
+
+    deregister_parser = subparsers.add_parser(
+        'deregister', help='Deregister virtual machines as GitHub runners'
+    )
+    group = deregister_parser.add_mutually_exclusive_group()
+    group.add_argument('-a', '--all', action='store_true', help='Deregister all machines')
+    group.add_argument('-m', '--machines', nargs='+', help='Deregister specified machines')
 
     args = parser.parse_args()
 
@@ -306,11 +328,44 @@ def ssh_vm(vm_name: str, cmd: str = '') -> None:
     call_ssh(get_vm_ip_addr(vm_name, required=True), cmd)
 
 
-def delete_vms(vms: list[str], check: bool = True) -> None:
+def delete_vms(vms: list[str], check: bool = True, deregister: bool = False) -> None:
     for vm in vms:
         print(f"[+] Deleting {vm} using virsh")
         subprocess.run(['virsh', 'destroy', vm], check=False)
         subprocess.run(['virsh', 'undefine', '--nvram', '--remove-all-storage', vm], check=check)
+    if deregister:
+        deregister_vms(vms)
+
+
+def deregister_vms(vms: list[str]) -> None:
+    if not (gh_token := os.environ.get('GITHUB_TOKEN')):
+        gh_token = getpass.getpass(
+            prompt='[+] GITHUB_TOKEN not set in environment, please provide one: '
+        )
+    request_headers = {
+        'Accept': 'application/vnd.github+json',
+        'Authorization': f"Bearer {gh_token}",
+        'X-GitHub-Api-Version': '2026-03-10',
+    }
+    repo = 'nathanchance/continuous-integration3'
+    runners_endpoint = f"https://api.github.com/repos/{repo}/actions/runners"
+
+    print('[+] Getting list of runners from GitHub API')
+    result = requests.get(runners_endpoint, headers=request_headers, timeout=10)
+    result.raise_for_status()
+    existing_runners = {item['name']: item['id'] for item in result.json()['runners']}
+
+    for vm in vms:
+        if vm not in existing_runners:
+            print(f"[+] {vm} not registered with GitHub, skipping!")
+            continue
+
+        print(f"[+] Deleting {vm} from {repo} via GitHub API")
+        requests.delete(
+            f"{runners_endpoint}/{existing_runners[vm]}",
+            headers=request_headers,
+            timeout=10,
+        ).raise_for_status()
 
 
 def list_vms(plain: bool = False) -> None:
@@ -374,6 +429,21 @@ def main():
         for vm in vms:
             print(f"[+] Updating {vm}")
             ssh_vm(vm, 'apt update && apt upgrade -y')
+
+    if args.action == 'deregister':
+        all_builder_vms = [vm for vm in virsh_list().splitlines() if BASE_BUILDER_VM_NAME in vm]
+        if args.all:
+            vms_to_deregister = all_builder_vms
+        elif args.machines:
+            vms_to_deregister = args.machines
+        elif not (
+            vms_to_deregister := fzf(
+                'Machines to deregister', '\n'.join(all_builder_vms), fzf_args=['--multi']
+            )
+        ):
+            print('[-] No machines selected, exiting...')
+            sys.exit(0)
+        deregister_vms(vms_to_deregister)
 
 
 if __name__ == '__main__':
