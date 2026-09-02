@@ -87,8 +87,21 @@ def parse_arguments():
         'deregister', help='Deregister virtual machines as GitHub runners'
     )
     group = deregister_parser.add_mutually_exclusive_group()
-    group.add_argument('-a', '--all', action='store_true', help='Deregister all machines')
-    group.add_argument('-m', '--machines', nargs='+', help='Deregister specified machines')
+    group.add_argument(
+        '-a',
+        '--all-local',
+        action='store_true',
+        help='Deregister all locally defined machines with GitHub',
+    )
+    group.add_argument(
+        '-A',
+        '--all-remote',
+        action='store_true',
+        help='Deregister all self-hosted runners on GitHub',
+    )
+    group.add_argument(
+        '-m', '--machines', nargs='+', help='Deregister specified machines with GitHub'
+    )
 
     args = parser.parse_args()
 
@@ -337,7 +350,7 @@ def delete_vms(vms: list[str], check: bool = True, deregister: bool = False) -> 
         deregister_vms(vms)
 
 
-def deregister_vms(vms: list[str]) -> None:
+def deregister_vms(vms: list[str], deregister_all: bool = False) -> None:
     if not (gh_token := os.environ.get('GITHUB_TOKEN')):
         gh_token = getpass.getpass(
             prompt='[+] GITHUB_TOKEN not set in environment, please provide one: '
@@ -354,6 +367,9 @@ def deregister_vms(vms: list[str]) -> None:
     result = requests.get(runners_endpoint, headers=request_headers, timeout=10)
     result.raise_for_status()
     existing_runners = {item['name']: item['id'] for item in result.json()['runners']}
+
+    if deregister_all:
+        vms += existing_runners.keys()
 
     for vm in vms:
         if vm not in existing_runners:
@@ -396,7 +412,7 @@ def main():
             if not (vms := fzf('Machines to delete', machines, fzf_args=['--multi'])):
                 print('[-] No machines selected, exiting...')
                 sys.exit(0)
-        delete_vms(vms)
+        delete_vms(vms, args.deregister)
 
     if args.action == 'recreate':
         check_root()
@@ -432,7 +448,10 @@ def main():
 
     if args.action == 'deregister':
         all_builder_vms = [vm for vm in virsh_list().splitlines() if BASE_BUILDER_VM_NAME in vm]
-        if args.all:
+        if args.all_remote:
+            deregister_vms([], deregister_all=True)
+            return
+        if args.all_local:
             vms_to_deregister = all_builder_vms
         elif args.machines:
             vms_to_deregister = args.machines
