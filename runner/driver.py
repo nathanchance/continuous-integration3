@@ -150,6 +150,11 @@ class Runner:
         (result := requests.get(gh_releases_json_url, timeout=15)).raise_for_status()
         gh_releases_json.write_bytes(result.content)
 
+        output_dir = self._tuxmake_kwargs['output_dir']
+        if (dtbs_tar := Path(output_dir, 'dtbs.tar.xz')).exists():
+            print(f"[+] Extracting {dtbs_tar}")
+            subprocess.run(['tar', '-C', output_dir, '-xJf', dtbs_tar], check=True)
+
         boot_qemu_py = Path(self._boot_utils_path, 'boot-qemu.py')
         print(f"[+] Running {boot_qemu_py.name}")
         boot_qemu_py_cmd = [
@@ -159,7 +164,7 @@ class Runner:
             '--gh-json-file',
             gh_releases_json,
             '-k',
-            self._tuxmake_kwargs['output_dir'],
+            output_dir,
         ]
         print(f"$ {' '.join(str(x) for x in boot_qemu_py_cmd)}")
         subprocess.run(boot_qemu_py_cmd, check=True)
