@@ -9,8 +9,14 @@ from argparse import ArgumentParser
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-GIT_DIR = Path('/srv/git')
-HTTP_DIR = Path('/srv/http')
+# If this file has more than three parents, it is being run from within the
+# repository, so we need to pivot the root properly
+if len((MIRROR_PY := Path(__file__).resolve()).parts) > 3:
+    ROOT = MIRROR_PY.parents[1]
+else:
+    ROOT = Path('/')
+GIT_DIR = Path(ROOT, 'srv/git')
+HTTP_DIR = Path(ROOT, 'srv/http')
 MIRROR_IP = '192.168.122.2'
 RAW_GH_URL = 'https://github.com/nathanchance/continuous-integration3/raw/refs/heads/main'
 
@@ -31,12 +37,6 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def srv_chown(username: str) -> None:
-    srv_dir = Path('/srv', username)
-    print(f"[+] Ensuring {username} user owns all content under {srv_dir}")
-    subprocess.run(['chown', '-R', f"{username}:{username}", srv_dir], check=True)
-
-
 def setup_srv_git() -> None:
     repo_urls = [
         'git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git',
@@ -44,21 +44,13 @@ def setup_srv_git() -> None:
     ]
     for repo_url in repo_urls:
         if (repo := Path(GIT_DIR, Path(repo_url).name)).exists():
-            print(f"[-] {repo} exists, skipping...")
+            print(f"[+] {repo} exists, updating")
+            subprocess.run(['git', '-C', repo, 'remote', 'update', '-p'], check=True)
             continue
 
         print(f"[+] Cloning {repo_url} to {repo}")
         git_clone_cmd = ['git', 'clone', '--mirror', repo_url, repo]
         subprocess.run(git_clone_cmd, check=True)
-
-        escaped_path = subprocess.run(
-            ['systemd-escape', '-p', repo], capture_output=True, check=True, text=True
-        ).stdout.strip()
-        timer_unit = f"every-15-minutes@update-git-mirror@{escaped_path}.timer"
-        print(f"[+] Enabling {timer_unit}")
-        subprocess.run(['systemctl', 'enable', '--now', timer_unit], check=True)
-
-    srv_chown('git')
 
 
 def curl_filechk(local_path: Path, url: str) -> None:
@@ -134,16 +126,6 @@ def setup_srv_http() -> None:
     update_korg_llvm()
     update_boot_utils_assets()
 
-    update_timers = [
-        'every-six-hours@update-http-mirror@korg-llvm.timer',
-        'every-six-hours@update-http-mirror@boot-utils-assets.timer',
-        'every-six-hours@update-opt-mirror-py.timer',
-    ]
-    print(f"[+] Enabling {', '.join(update_timers)}")
-    subprocess.run(['systemctl', 'enable', '--now', *update_timers], check=True)
-
-    srv_chown('http')
-
 
 def prune_srv_http() -> None:
     cached_llvm_tarballs: dict[str, list[tuple[tuple[int, ...], Path]]] = {}
@@ -187,9 +169,11 @@ def main():
     args = parse_arguments()
 
     if args.action == 'setup':
-        setup_srv_git()
-        setup_srv_http()
-        setup_srv_registry()
+        if ROOT == Path('/'):
+            setup_srv_registry()
+        else:
+            setup_srv_git()
+            setup_srv_http()
 
     if args.action == 'update':
         if args.item == 'korg-llvm':
