@@ -225,6 +225,12 @@ class PowerPCRunner(Runner):
         super()._build()
 
 
+class RISCVRunner(Runner):
+    def _build(self) -> None:
+        self._tuxmake_kwargs['kernel_image'] = 'Image'
+        super()._build()
+
+
 def main() -> None:
     args = parse_arguments()
 
@@ -239,6 +245,7 @@ def main() -> None:
         'i386': I386Runner,
         'mips': MipsRunner,
         'powerpc': PowerPCRunner,
+        'riscv': RISCVRunner,
     }
     runner: Runner = arch_runners.get(args.arch, Runner)()
     runner.arch = args.arch
