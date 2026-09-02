@@ -1,10 +1,7 @@
-#!/usr/bin/env -S uv run --script --quiet
-# /// script
-# requires-python = ">=3.13"
-# dependencies = [
-#     "requests>=2.34.2",
-# ]
-# ///
+#!/usr/bin/env python3
+# This cannot be run via uv because virt-install is a Python program that does
+# not run properly in the isolated virtual environment (which is the biggest
+# benefit of uv)
 
 import getpass
 import os
