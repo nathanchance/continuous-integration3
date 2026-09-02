@@ -45,11 +45,6 @@ Each build server runs...
     Repository access: Only continuous-integration3
     Permissions: Administration (Read and write)
     ```
-- Generate [a classic token](https://github.com/settings/tokens) to allow uploading `ghcr.io` packages
-    ```
-    Note: ghcr.io administration
-    Scopes: write:packages
-    ```
 
 ### Per-host configuration
 
@@ -71,23 +66,14 @@ Each build server runs...
     infra/build_base_builder_vm_image.sh &&
     infra/build_mirror_vm_image.sh
     ```
+    The mirror image may take some time to build, as the mirrored content will be downloaded to the host then included in the image during the build process so that the mirror image can easily be recreated without needing to download all mirrored content from scratch.
 5. Create virtual machines using `infra/vmm.py`
     ```
     run0 infra/vmm.py create -m -n 2 -b 1
     ```
     The above command creates a mirror virtual machine, two normal virtual machines, and one big virtual machine
 
-    To setup `cbl-builder-vm` instances, run
-    ```
-    /opt/setup_vm.py && exit
-    ```
-    Use the fine-grained access token created above for runner administration when prompted.
-
-    To setup `cbl-mirror-vm`, run
-    ```
-    /opt/mirror.py setup && exit
-    ```
-    Downloading all content may take a while.
+    To setup `cbl-builder-vm` instances, provide the fine-grained access token created above for runner administration when prompted.
 
 ### Demonstration video
 
