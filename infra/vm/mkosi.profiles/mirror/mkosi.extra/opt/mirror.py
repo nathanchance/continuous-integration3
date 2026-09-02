@@ -158,22 +158,15 @@ def prune_srv_http() -> None:
             tarball.unlink()
 
 
-def setup_srv_registry() -> None:
-    # registry runs as a user service under the registry user. Enable linger
-    # for the registry user so that a user session is always started on boot,
-    # regardless of login status.
-    subprocess.run(['loginctl', 'enable-linger', 'registry'], check=True)
-
-
 def main():
     args = parse_arguments()
 
     if args.action == 'setup':
         if ROOT == Path('/'):
-            setup_srv_registry()
-        else:
-            setup_srv_git()
-            setup_srv_http()
+            msg = 'setup must be run on host system, not in virtual machine!'
+            raise RuntimeError(msg)
+        setup_srv_git()
+        setup_srv_http()
 
     if args.action == 'update':
         if args.item == 'korg-llvm':

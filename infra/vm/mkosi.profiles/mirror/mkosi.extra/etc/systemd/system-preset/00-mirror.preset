@@ -1,3 +1,4 @@
+enable enable-linger@registry.service
 enable every-15-minutes@update-git-mirror@srv-git-linux.git.timer
 enable every-15-minutes@update-git-mirror@srv-git-boot\x2dutils.git.timer
 enable every-six-hours@update-http-mirror@korg-llvm.timer
