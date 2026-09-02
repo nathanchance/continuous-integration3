@@ -1,1 +1,1 @@
-enable daily@uv-self-update.timer
+enable daily@.timer uv-self-update
