@@ -33,7 +33,7 @@ def clone_mirror_repo(remote_repo_name: str, local_repo_name: str = '') -> Path:
     print(f"[+] Cloning {remote_repo} to {local_repo}")
     subprocess.run(['git', 'clone', '--depth=1', '--quiet', remote_repo, local_repo], check=True)
 
-    info_cmd = ['git', '-C', local_repo, 'show', '-s', '--format=%h ("%s", %cs)']
+    info_cmd = ['git', '-C', local_repo, 'show', '-s', '--format=%H ("%s", %cs)']
     info_output = subprocess.run(
         info_cmd, capture_output=True, check=True, text=True
     ).stdout.strip()
@@ -41,7 +41,7 @@ def clone_mirror_repo(remote_repo_name: str, local_repo_name: str = '') -> Path:
     branch_output = subprocess.run(
         branch_cmd, capture_output=True, check=True, text=True
     ).stdout.strip()
-    print(f"[+] Successfully checked out {local_repo.name} at {branch_output}: {info_output}")
+    print(f"[+] Successfully checked out {local_repo.name}: {branch_output}@{info_output}")
 
     return local_repo
 
