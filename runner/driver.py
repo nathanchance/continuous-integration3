@@ -192,6 +192,12 @@ class ARMRunner(Runner):
         super()._build()
 
 
+class I386Runner(Runner):
+    def _boot(self) -> None:
+        self._boot_utils_arch = 'x86'
+        super()._boot()
+
+
 class MipsRunner(Runner):
     def _boot(self) -> None:
         self._boot_utils_arch = 'mips' if 'CONFIG_CPU_BIG_ENDIAN=y' in self.kconfigs else 'mipsel'
@@ -225,6 +231,7 @@ def main() -> None:
 
     arch_runners = {
         'arm': ARMRunner,
+        'i386': I386Runner,
         'mips': MipsRunner,
         'powerpc': PowerPCRunner,
     }
