@@ -409,7 +409,7 @@ def main():
             if not (vms := fzf('Machines to delete', machines, fzf_args=['--multi'])):
                 print('[-] No machines selected, exiting...')
                 sys.exit(0)
-        delete_vms(vms, args.deregister)
+        delete_vms(vms, deregister=args.deregister)
 
     if args.action == 'recreate':
         check_root()
