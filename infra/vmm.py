@@ -180,7 +180,7 @@ def create_mirror_vm(skip_ssh: bool = False) -> None:
         msg = f"Mirror VM image ('{base_image}') does not exist, run {MKOSI_OUTPUT.parents[1]}/build_mirror_vm_image.sh!"
         raise RuntimeError(msg)
 
-    create_vm(vm_name, base_image, skip_ssh, initial_setup_cmd='/opt/mirror.py setup')
+    create_vm(vm_name, base_image, skip_ssh)
 
 
 def create_vm(
@@ -261,7 +261,8 @@ def create_vm(
                     break
 
         print(f"[+] Opening ssh session into {vm_name}")
-        print(f"[+] Run '{initial_setup_cmd} && exit' once connected")
+        if initial_setup_cmd:
+            print(f"[+] Run '{initial_setup_cmd} && exit' once connected")
         call_ssh(ip_addr)
 
 
