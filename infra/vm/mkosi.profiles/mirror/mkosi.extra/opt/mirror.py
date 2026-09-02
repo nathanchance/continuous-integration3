@@ -11,10 +11,7 @@ from tempfile import TemporaryDirectory
 
 # If this file has more than three parents, it is being run from within the
 # repository, so we need to pivot the root properly
-if len((MIRROR_PY := Path(__file__).resolve()).parts) > 3:
-    ROOT = MIRROR_PY.parents[1]
-else:
-    ROOT = Path('/')
+ROOT = MIRROR_PY.parents[1] if len((MIRROR_PY := Path(__file__).resolve()).parts) > 3 else Path('/')
 GIT_DIR = Path(ROOT, 'srv/git')
 HTTP_DIR = Path(ROOT, 'srv/http')
 MIRROR_IP = '192.168.122.2'
@@ -163,7 +160,7 @@ def main():
     args = parse_arguments()
 
     if args.action == 'setup':
-        if ROOT == Path('/'):
+        if Path('/') == ROOT:
             msg = 'setup must be run on host system, not in virtual machine!'
             raise RuntimeError(msg)
         setup_srv_git()
