@@ -219,6 +219,7 @@ def install_packages() -> None:
         'skopeo',
         # vmm.py
         'fzf',
+        'python3-requests',
     ]
     subprocess.run(['apt', 'install', '--no-install-recommends', '-y', *packages], check=True)
 
