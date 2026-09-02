@@ -166,7 +166,7 @@ def create_builder_vms(
             ]
 
     for vm_name in new_vms:
-        create_vm(vm_name, base_image, skip_ssh, initial_setup_cmd='/opt/setup_vm.py')
+        create_vm(vm_name, base_image, skip_ssh, initial_setup_cmd='/opt/setup_vm.py && exit')
 
 
 def create_mirror_vm(skip_ssh: bool = False) -> None:
@@ -242,7 +242,7 @@ def create_vm(
 
     if skip_ssh:
         print('[-] Skipping ssh session')
-    else:
+    elif initial_setup_cmd:
         limit = 45
         interval = 5
         iterations = int(limit / interval)
@@ -260,10 +260,8 @@ def create_vm(
                     time.sleep(interval)  # make sure ssh has come up
                     break
 
-        print(f"[+] Opening ssh session into {vm_name}")
-        if initial_setup_cmd:
-            print(f"[+] Run '{initial_setup_cmd} && exit' once connected")
-        call_ssh(ip_addr)
+        print(f"[+] Opening ssh session into {vm_name} for setup")
+        call_ssh(ip_addr, initial_setup_cmd)
 
 
 def virsh_list(plain: bool = True, running: bool = False, sift: bool = True) -> str:
