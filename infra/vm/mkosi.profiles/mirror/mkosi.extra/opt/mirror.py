@@ -37,6 +37,7 @@ def parse_arguments():
 def setup_srv_git() -> None:
     repo_urls = [
         'git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git',
+        'git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git',
         'https://github.com/ClangBuiltLinux/boot-utils.git',
     ]
     for repo_url in repo_urls:

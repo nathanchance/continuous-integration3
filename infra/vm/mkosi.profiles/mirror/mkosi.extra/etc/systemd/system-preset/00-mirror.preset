@@ -1,5 +1,5 @@
 enable enable-linger@.service registry
-enable every-15-minutes@.timer update-git-mirror@srv-git-linux.git update-git-mirror@srv-git-boot\x2dutils.git
+enable every-15-minutes@.timer update-git-mirror@srv-git-linux.git update-git-mirror@srv-git-linux\x2dnext.git update-git-mirror@srv-git-boot\x2dutils.git
 enable every-six-hours@.timer update-http-mirror@korg-llvm update-http-mirror@boot-utils-assets update-opt-mirror-py
 enable git-daemon.socket
 enable serve-http-mirror.service
