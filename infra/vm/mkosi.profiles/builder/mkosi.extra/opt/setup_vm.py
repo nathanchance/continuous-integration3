@@ -31,10 +31,8 @@ def get_github_token() -> str:
     )
     if proc.returncode == 0:
         return proc.stdout
-    if token := os.environ.get('GITHUB_TOKEN'):
-        return token
     return getpass.getpass(
-        prompt='[+] GITHUB_TOKEN available via systemd-creds or environment, please provide one: '
+        prompt='[+] GITHUB_TOKEN available via systemd-creds, please provide one: '
     )
 
 
