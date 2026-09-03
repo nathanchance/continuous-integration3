@@ -22,6 +22,7 @@ HOSTNAME = socket.gethostname()
 ADMIN_HOME = Path('/home/cbl-admin')
 BASE_BUILDER_IMG_NAME = 'cbl-builder-vm'
 BASE_BUILDER_VM_NAME = f"{BASE_BUILDER_IMG_NAME}-{HOSTNAME}"
+GH_TOKEN_CRED = Path(ADMIN_HOME, '.github_token.cred')
 LIBVIRT_STORE = Path(ADMIN_HOME, 'libvirt')
 MKOSI_OUTPUT = Path(ADMIN_HOME, 'continuous-integration3/infra/vm/mkosi.output')
 MIRROR_VM_NAME = 'cbl-mirror-vm'
@@ -148,9 +149,34 @@ def fzf(header: str, fzf_input: str, fzf_args: list[str] | None = None) -> list[
 
 
 def get_github_token() -> str:
-    if token := os.environ.get('GITHUB_TOKEN'):
-        return token
-    return getpass.getpass(prompt='[+] GITHUB_TOKEN not set in environment, please provide one: ')
+    currently_root = os.geteuid() == 0
+    base_systemd_creds_cmd = [
+        'systemd-creds',
+        f"--uid={ADMIN_HOME.name}" if currently_root else '--user',
+    ]
+
+    proc = subprocess.run(
+        [*base_systemd_creds_cmd, 'decrypt', GH_TOKEN_CRED],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    if proc.returncode == 0:
+        return proc.stdout
+
+    github_token = getpass.getpass(
+        prompt='[+] GITHUB_TOKEN not available via systemd-creds, please provide one: '
+    )
+    print('[+] Encrypting GITHUB_TOKEN via systemd-creds for future use')
+    subprocess.run(
+        [*base_systemd_creds_cmd, 'encrypt', '-', GH_TOKEN_CRED],
+        check=True,
+        input=github_token,
+        text=True,
+    )
+    shutil.chown(GH_TOKEN_CRED, user=ADMIN_HOME.name, group=ADMIN_HOME.name)
+
+    return github_token
 
 
 def virsh_dumpxml(vm_name: str) -> ElementTree:
