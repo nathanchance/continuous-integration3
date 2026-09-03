@@ -20,7 +20,7 @@ import tuxmake.build
 MIRROR_GIT = 'git://192.168.122.2'
 MIRROR_HTTP = f"{MIRROR_GIT.replace('git', 'http')}:8080"
 VALID_LLVM_VERS = tuple(range(23, 21, -1))
-VALID_TREES = ('linux',)
+VALID_TREES = ('linux', 'linux-next')
 
 
 def clone_mirror_repo(remote_repo_name: str, local_repo_name: str = '') -> Path:
