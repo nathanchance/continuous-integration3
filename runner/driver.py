@@ -72,6 +72,12 @@ def parse_arguments():
     return parser.parse_args()
 
 
+def register_problem_matchers() -> None:
+    repo_root = Path(__file__).resolve().parents[1]
+    for problem_matcher in repo_root.glob('.github/problem-matchers/*'):
+        print(f"::add-matcher::{problem_matcher}")
+
+
 class Runner:
     def __init__(self) -> None:
         self.arch: str = ''
@@ -244,6 +250,8 @@ def main() -> None:
     except subprocess.CalledProcessError as err:
         msg = f"Not running driver.py in a container? systemd-detect-virt shows '{err.stdout.strip()}'"
         raise RuntimeError(msg) from err
+
+    register_problem_matchers()
 
     arch_runners = {
         'arm': ARMRunner,
