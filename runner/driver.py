@@ -88,7 +88,12 @@ class Runner:
             'kconfig': '',
             'kconfig_add': [],
             'kernel_image': None,
-            'make_variables': {'LLVM': '1', 'LLVM_IAS': '1'},
+            'make_variables': {
+                'LLVM': '1',
+                # This can go away when 5.15 is the minimum supported version by this driver
+                # due to commit f12b034afeb3 ("scripts/Makefile.clang: default to LLVM_IAS=1")
+                'LLVM_IAS': '1',
+            },
             'output_dir': Path('/output'),
             'target_arch': '',
             'targets': [],
