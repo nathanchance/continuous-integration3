@@ -1,4 +1,4 @@
-name: build kernels
+name: build kernels (linux - LLVM 23)
 on: workflow_dispatch
 jobs:
   build_arm_multi_v5_defconfig:
@@ -15,7 +15,7 @@ jobs:
           --tty \
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
-          /work/runner/driver.py -a arm -b -k multi_v5_defconfig
+          /work/runner/driver.py -a arm -b -k multi_v5_defconfig -l 23 -t linux
 
   build_arm_aspeed_g5_defconfig:
     name: Build and boot arm aspeed_g5_defconfig
@@ -31,7 +31,7 @@ jobs:
           --tty \
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
-          /work/runner/driver.py -a arm -b -k aspeed_g5_defconfig
+          /work/runner/driver.py -a arm -b -k aspeed_g5_defconfig -l 23 -t linux
 
   build_arm_multi_v7_defconfig:
     name: Build and boot arm multi_v7_defconfig
@@ -47,7 +47,7 @@ jobs:
           --tty \
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
-          /work/runner/driver.py -a arm -b -k multi_v7_defconfig
+          /work/runner/driver.py -a arm -b -k multi_v7_defconfig -l 23 -t linux
 
   build_arm64_defconfig:
     name: Build and boot arm64 defconfig
@@ -63,7 +63,7 @@ jobs:
           --tty \
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
-          /work/runner/driver.py -a arm64 -b -k defconfig
+          /work/runner/driver.py -a arm64 -b -k defconfig -l 23 -t linux
 
   build_i386_defconfig:
     name: Build and boot i386 defconfig
@@ -79,7 +79,7 @@ jobs:
           --tty \
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
-          /work/runner/driver.py -a i386 -b -k defconfig
+          /work/runner/driver.py -a i386 -b -k defconfig -l 23 -t linux
 
   build_loongarch_defconfig:
     name: Build and boot loongarch defconfig
@@ -95,7 +95,7 @@ jobs:
           --tty \
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
-          /work/runner/driver.py -a loongarch -b -k defconfig
+          /work/runner/driver.py -a loongarch -b -k defconfig -l 23 -t linux
 
   build_mips_malta_defconfig:
     name: Build and boot mips malta_defconfig
@@ -111,7 +111,7 @@ jobs:
           --tty \
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
-          /work/runner/driver.py -a mips -b -k malta_defconfig
+          /work/runner/driver.py -a mips -b -k malta_defconfig -l 23 -t linux
 
   build_mips_malta_defconfig_be:
     name: Build and boot mips malta_defconfig (big endian)
@@ -127,7 +127,7 @@ jobs:
           --tty \
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
-          /work/runner/driver.py -a mips -b -k malta_defconfig CONFIG_CPU_BIG_ENDIAN=y
+          /work/runner/driver.py -a mips -b -k malta_defconfig CONFIG_CPU_BIG_ENDIAN=y -l 23 -t linux
 
   build_powerpc_ppc64_guest_defconfig:
     name: Build and boot powerpc ppc64_guest_defconfig
@@ -143,7 +143,7 @@ jobs:
           --tty \
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
-          /work/runner/driver.py -a powerpc -b -k ppc64_guest_defconfig
+          /work/runner/driver.py -a powerpc -b -k ppc64_guest_defconfig -l 23 -t linux
 
   build_powerpc_powernv_defconfig:
     name: Build and boot powerpc powernv_defconfig
@@ -159,7 +159,7 @@ jobs:
           --tty \
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
-          /work/runner/driver.py -a powerpc -b -k powernv_defconfig
+          /work/runner/driver.py -a powerpc -b -k powernv_defconfig -l 23 -t linux
 
   build_riscv_defconfig:
     name: Build and boot riscv defconfig
@@ -175,7 +175,7 @@ jobs:
           --tty \
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
-          /work/runner/driver.py -a riscv -b -k defconfig
+          /work/runner/driver.py -a riscv -b -k defconfig -l 23 -t linux
 
   build_s390_defconfig:
     name: Build and boot s390 defconfig
@@ -191,7 +191,7 @@ jobs:
           --tty \
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
-          /work/runner/driver.py -a s390 -b -k defconfig
+          /work/runner/driver.py -a s390 -b -k defconfig -l 23 -t linux
 
   build_x86_64_defconfig:
     name: Build and boot x86_64 defconfig
@@ -207,10 +207,26 @@ jobs:
           --tty \
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
-          /work/runner/driver.py -a x86_64 -b -k defconfig
+          /work/runner/driver.py -a x86_64 -b -k defconfig -l 23 -t linux
+
+  build_arm_allmodconfig:
+    name: Build arm allmodconfig
+    runs-on: [self-hosted, big]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: arm allmodconfig
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm -k allmodconfig -l 23 -t linux
 
   build_arm64_allmodconfig:
-    name: Build and boot arm64 allmodconfig
+    name: Build arm64 allmodconfig
     runs-on: [self-hosted, big]
     steps:
     - name: Clone repository
@@ -223,10 +239,10 @@ jobs:
           --tty \
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
-          /work/runner/driver.py -a arm64 -k allmodconfig
+          /work/runner/driver.py -a arm64 -k allmodconfig -l 23 -t linux
 
   build_x86_64_allmodconfig:
-    name: Build and boot x86_64 allmodconfig
+    name: Build x86_64 allmodconfig
     runs-on: [self-hosted, big]
     steps:
     - name: Clone repository
@@ -239,7 +255,23 @@ jobs:
           --tty \
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
-          /work/runner/driver.py -a x86_64 -k allmodconfig
+          /work/runner/driver.py -a x86_64 -k allmodconfig -l 23 -t linux
+
+  build_aarch64_fedora:
+    name: Build and boot aarch64 Fedora configuration
+    runs-on: [self-hosted, big]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: aarch64 Fedora
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm64 -b -k https://github.com/ClangBuiltLinux/rpms_kernel/raw/rawhide/kernel-aarch64-fedora.config -l 23 -t linux
 
   build_x86_64_archlinux:
     name: Build and boot x86_64 Arch Linux configuration
@@ -255,4 +287,4 @@ jobs:
           --tty \
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
-          /work/runner/driver.py -a x86_64 -b -k https://github.com/ClangBuiltLinux/linux_pkgbuild/raw/main/config.x86_64
+          /work/runner/driver.py -a x86_64 -b -k https://github.com/ClangBuiltLinux/linux_pkgbuild/raw/main/config.x86_64 -l 23 -t linux
