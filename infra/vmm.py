@@ -13,6 +13,8 @@ import sys
 import time
 from argparse import ArgumentParser
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from xml.etree.ElementTree import ElementTree
 
 import requests
 
@@ -41,6 +43,12 @@ def parse_arguments():
         type=int,
     )
     create_parser.add_argument(
+        '-g',
+        '--github-token',
+        action='store_true',
+        help='Pass GITHUB_TOKEN via systemd-creds to virtual machine',
+    )
+    create_parser.add_argument(
         '-m', '--mirror', action='store_true', help='Create mirroring virtual machine'
     )
     create_parser.add_argument(
@@ -66,6 +74,12 @@ def parse_arguments():
     delete_parser.add_argument('vms', nargs='*', help='Virtual machines to delete')
 
     recreate_parser = subparsers.add_parser('recreate', help='Recreate existing virtual machine')
+    recreate_parser.add_argument(
+        '-g',
+        '--github-token',
+        action='store_true',
+        help='Pass GITHUB_TOKEN via systemd-creds to virtual machine',
+    )
     recreate_parser.add_argument('type', choices=('big', 'normal'), help='Type of virtual machine')
     recreate_parser.add_argument('num', help='Virtual machine number', type=int)
 
@@ -133,8 +147,24 @@ def fzf(header: str, fzf_input: str, fzf_args: list[str] | None = None) -> list[
         return [fzf_output.strip()]
 
 
+def get_github_token() -> str:
+    if token := os.environ.get('GITHUB_TOKEN'):
+        return token
+    return getpass.getpass(prompt='[+] GITHUB_TOKEN not set in environment, please provide one: ')
+
+
+def virsh_dumpxml(vm_name: str) -> ElementTree:
+    with TemporaryDirectory() as tempdir:
+        with (dumpxml := Path(tempdir, 'dump.xml')).open('w', encoding='utf-8') as file:
+            subprocess.run(
+                ['virsh', 'dumpxml', vm_name], check=True, stderr=subprocess.PIPE, stdout=file
+            )
+        (tree := ElementTree()).parse(dumpxml)
+    return tree
+
+
 def create_builder_vms(
-    num_normal: int, num_big: int, skip_ssh: bool = False, base: int = 0
+    num_normal: int, num_big: int, skip_ssh: bool = False, github_token: str = '', base: int = 0
 ) -> None:
     if num_normal == 0 and num_big == 0:
         return
@@ -166,7 +196,14 @@ def create_builder_vms(
             ]
 
     for vm_name in new_vms:
-        create_vm(vm_name, base_image, skip_ssh, initial_setup_cmd='/opt/setup_vm.py && exit')
+        initial_setup_cmd = f"/opt/setup_vm.py && {'poweroff' if github_token else 'exit'}"
+        create_vm(
+            vm_name,
+            base_image,
+            skip_ssh,
+            initial_setup_cmd=initial_setup_cmd,
+            github_token=github_token,
+        )
 
 
 def create_mirror_vm(skip_ssh: bool = False) -> None:
@@ -184,7 +221,11 @@ def create_mirror_vm(skip_ssh: bool = False) -> None:
 
 
 def create_vm(
-    vm_name: str, base_image: Path, skip_ssh: bool = False, initial_setup_cmd: str = ''
+    vm_name: str,
+    base_image: Path,
+    skip_ssh: bool = False,
+    initial_setup_cmd: str = '',
+    github_token: str = '',
 ) -> None:
     # Make sure we don't try to overwrite an existing image
     if (dst_image := Path(LIBVIRT_STORE, vm_name).with_suffix('.raw')).exists():
@@ -238,30 +279,78 @@ def create_vm(
         'none',
         '--autostart',
     ]
+    if github_token:
+        if skip_ssh:
+            print(
+                '[-] GitHub token provided but ssh session skipped, not passing token along to avoid including token in libvirt XML definition indefinitely...'
+            )
+        else:
+            virt_install_cmd += [
+                '--sysinfo',
+                f"oemStrings.entry0=io.systemd.credential:github_token={github_token}",
+            ]
     subprocess.run(virt_install_cmd, check=True)
 
+    if not initial_setup_cmd:
+        return
     if skip_ssh:
         print('[-] Skipping initial ssh setup session')
-    elif initial_setup_cmd:
-        limit = 45
-        interval = 5
-        iterations = int(limit / interval)
-        print(f"[+] Waiting up to {limit} seconds for networking to come up...")
-        for i in range(1, iterations):
-            time.sleep(interval)
-            ip_addr = get_vm_ip_addr(vm_name, required=(i == iterations))
-            if ip_addr and vm_name != MIRROR_VM_NAME:
-                break
-            if vm_name == MIRROR_VM_NAME:
-                ping_res = subprocess.run(
-                    ['ping', '-c', '1', ip_addr], capture_output=True, check=False
-                )
-                if ping_res.returncode == 0:
-                    time.sleep(interval)  # make sure ssh has come up
-                    break
+        return
 
-        print(f"[+] Opening ssh session into {vm_name} for setup")
-        call_ssh(ip_addr, initial_setup_cmd)
+    limit = 45
+    interval = 5
+    iterations = int(limit / interval)
+    print(f"[+] Waiting up to {limit} seconds for networking to come up...")
+    for i in range(1, iterations):
+        time.sleep(interval)
+        ip_addr = get_vm_ip_addr(vm_name, required=(i == iterations))
+        if ip_addr and vm_name != MIRROR_VM_NAME:
+            break
+        if vm_name == MIRROR_VM_NAME:
+            ping_res = subprocess.run(
+                ['ping', '-c', '1', ip_addr], capture_output=True, check=False
+            )
+            if ping_res.returncode == 0:
+                time.sleep(interval)  # make sure ssh has come up
+                break
+
+    print(f"[+] Opening ssh session into {vm_name} for setup")
+    call_ssh(ip_addr, initial_setup_cmd)
+
+    if github_token:
+        print(f"Waiting {interval * 1.5} seconds for {vm_name} to finish powering off")
+        time.sleep(interval * 1.5)
+
+        # Get current domain XML and look for sysinfo and smbios nodes
+        tree = virsh_dumpxml(vm_name)
+        if (domain := tree.getroot()) is None:
+            msg = 'Could not get domain node!'
+            raise RuntimeError(msg)
+        if (sysinfo_node := domain.find('sysinfo')) is None:
+            print(f"[-] Cannot find sysinfo node for {vm_name}, this is unexpected!")
+            return
+
+        print(f"[+] Removing sysinfo and smbios nodes from {vm_name} XML to clear GitHub token")
+        domain.remove(sysinfo_node)
+        if (os_node := domain.find('os')) is not None and (
+            smbios_node := os_node.find('smbios')
+        ) is not None:
+            os_node.remove(smbios_node)
+
+        with TemporaryDirectory() as tempdir:
+            tree.write(new_xml := Path(tempdir, 'new.xml'))
+            subprocess.run(['virsh', 'define', '--validate', new_xml], check=True)
+
+        print(f"[+] Starting {vm_name} with updated XML")
+        subprocess.run(['virsh', 'start', vm_name], check=True)
+
+        print(f"[+] Checking that {vm_name} XML has no sysinfo node when running")
+        if (domain := virsh_dumpxml(vm_name).getroot()) is None:
+            msg = 'Could not get domain node!'
+            raise RuntimeError(msg)
+        if domain.find('sysinfo') is not None:
+            msg = f"sysinfo node exists for {vm_name}!"
+            raise RuntimeError(msg)
 
 
 def virsh_list(plain: bool = True, running: bool = False, sift: bool = True) -> str:
@@ -347,10 +436,7 @@ def delete_vms(vms: list[str], check: bool = True, deregister: bool = False) -> 
 
 
 def deregister_vms(vms: list[str], deregister_all: bool = False) -> None:
-    if not (gh_token := os.environ.get('GITHUB_TOKEN')):
-        gh_token = getpass.getpass(
-            prompt='[+] GITHUB_TOKEN not set in environment, please provide one: '
-        )
+    gh_token = get_github_token()
     request_headers = {
         'Accept': 'application/vnd.github+json',
         'Authorization': f"Bearer {gh_token}",
@@ -396,9 +482,10 @@ def main():
     args = parse_arguments()
 
     if args.action == 'create':
+        github_token = get_github_token() if args.github_token else ''
         if args.mirror:
             create_mirror_vm(args.skip_ssh)
-        create_builder_vms(args.normal, args.big, args.skip_ssh)
+        create_builder_vms(args.normal, args.big, args.skip_ssh, github_token=github_token)
 
     if args.action == 'delete':
         if not (vms := args.vms):
@@ -412,9 +499,13 @@ def main():
 
     if args.action == 'recreate':
         check_root()
+        github_token = get_github_token() if args.github_token else ''
         delete_vms([f"{BASE_BUILDER_VM_NAME}-{args.type}-{args.num}"], check=False)
         create_builder_vms(
-            1 if args.type == 'normal' else 0, 1 if args.type == 'big' else 0, base=args.num
+            1 if args.type == 'normal' else 0,
+            1 if args.type == 'big' else 0,
+            base=args.num,
+            github_token=github_token,
         )
 
     if args.action == 'ssh':
