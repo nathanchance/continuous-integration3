@@ -23,9 +23,19 @@ RUNNER_NAME = 'gh-runner'
 
 
 def get_github_token() -> str:
+    proc = subprocess.run(
+        ['systemd-creds', '--system', 'cat', 'github_token'],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    if proc.returncode == 0:
+        return proc.stdout
     if token := os.environ.get('GITHUB_TOKEN'):
         return token
-    return getpass.getpass(prompt='[+] GITHUB_TOKEN not set in environment, please provide one: ')
+    return getpass.getpass(
+        prompt='[+] GITHUB_TOKEN available via systemd-creds or environment, please provide one: '
+    )
 
 
 def prechecks() -> None:
