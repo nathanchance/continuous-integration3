@@ -7,6 +7,7 @@
 # ///
 # Sets up bare metal server from Hetzner
 
+import getpass
 import os
 import pwd
 import re
@@ -246,6 +247,23 @@ def write_ssh_authorized_keys(username: str, keys_txt: str) -> None:
         os.umask(old_umask)
 
 
+def setup_systemd_creds() -> None:
+    print('[+] Setting up systemd-creds')
+    subprocess.run(['systemd-creds', 'setup'], check=True)
+    if not (gh_token_cred := Path('/home', ADMIN_NAME, '.github_token.cred')).exists():
+        github_token = getpass.getpass(
+            prompt='[+] Provide GITHUB_TOKEN for managing self-hosted runners: '
+        )
+        print('[+] Encrypting GITHUB_TOKEN via systemd-creds')
+        subprocess.run(
+            ['systemd-creds', '--uid', ADMIN_NAME, 'encrypt', '-', gh_token_cred],
+            check=True,
+            input=github_token,
+            text=True,
+        )
+        shutil.chown(gh_token_cred, user=ADMIN_NAME, group=ADMIN_NAME)
+
+
 def clone_ci3_repo() -> None:
     git_url = 'https://github.com/nathanchance/continuous-integration3'
     git_dst = Path('/home', ADMIN_NAME, git_url.rsplit('/', 1)[1])
@@ -261,6 +279,7 @@ def main():
     create_user()
     configure_ssh()
     configure_libvirt()
+    setup_systemd_creds()
     clone_ci3_repo()
 
 
