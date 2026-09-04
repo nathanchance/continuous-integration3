@@ -36,7 +36,7 @@ def clone_mirror_repo(remote_repo_name: str, local_repo_name: str = '') -> Path:
     print(f"[+] Cloning {remote_repo} to {local_repo}", end='')
     start = time.time()
     subprocess.run(['git', 'clone', '--depth=1', '--quiet', remote_repo, local_repo], check=True)
-    print(f" (duration: {get_duration(start)})")
+    print(f" [duration: {get_duration(start)}]")
 
     info_cmd = ['git', '-C', local_repo, 'show', '-s', '--format=%H ("%s", %cs)']
     info_output = subprocess.run(
@@ -181,17 +181,20 @@ class Runner:
         # Download and extract toolchain into build container
         self._toolchain_prefix = Path('/', toolchain_tarball.replace('.tar.xz', ''))
         tar_url = f"{MIRROR_HTTP}/toolchains/{toolchain_tarball}"
-        print(f"[+] Downloading {tar_url}...", end='')
+        print(f"[+] Downloading {tar_url}", end='')
         start = time.time()
         result = requests.get(tar_url, timeout=15)
         result.raise_for_status()
-        print(f" (duration: {get_duration(start)})")
-        print(f"[+] Extracting {toolchain_tarball} to {self._toolchain_prefix}")
+        print(f" [duration: {get_duration(start)}]")
+
+        print(f"[+] Extracting {toolchain_tarball} to {self._toolchain_prefix}", end='')
+        start = time.time()
         subprocess.run(
             ['tar', '-C', self._toolchain_prefix.parent, '-f', '-', '-J', '-x'],
             check=True,
             input=result.content,
         )
+        print(f" [duration: {get_duration(start)}]")
 
     def _prepare_git(self) -> None:
         self._tuxmake_kwargs['tree'] = clone_mirror_repo(self.tree)
@@ -216,11 +219,11 @@ class Runner:
         results = metadata['results']
         tuxmake_duration = get_duration(0, round(sum(results['duration'].values()), 2))
         if tuxmake_res.failed:
-            print(f"[!] tuxmake failed (duration: {tuxmake_duration}, errors: {results['errors']})")
+            print(f"[!] tuxmake failed [duration: {tuxmake_duration}, errors: {results['errors']}]")
             sys.exit(1)
 
         print(
-            f"[!] tuxmake succeeded (duration: {tuxmake_duration}, warnings: {results['warnings']})"
+            f"[+] tuxmake succeeded [duration: {tuxmake_duration}, warnings: {results['warnings']}]"
         )
 
         validate_config(output_dir.joinpath('config'), metadata['build']['kconfig_add'])
