@@ -104,12 +104,13 @@ def register_problem_matchers() -> None:
         return
 
     if not (work := Path('/work')).exists():
-        print('[!] Running in GitHub Actions but GITHUB_WORKSPACE is not mounted in?')
+        print('[!] Running in GitHub Actions but GITHUB_WORKSPACE is not mounted in?', flush=True)
         sys.exit(1)
 
     for problem_matcher in work.glob('.github/problem-matchers/*'):
         print(
-            f"::add-matcher::{str(problem_matcher).replace('/work', os.environ['GITHUB_WORKSPACE'])}"
+            f"::add-matcher::{str(problem_matcher).replace('/work', os.environ['GITHUB_WORKSPACE'])}",
+            flush=True,
         )
 
 
