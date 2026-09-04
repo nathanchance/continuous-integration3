@@ -46,7 +46,9 @@ def clone_mirror_repo(remote_repo_name: str, local_repo_name: str = '') -> Path:
     branch_output = subprocess.run(
         branch_cmd, capture_output=True, check=True, text=True
     ).stdout.strip()
-    print(f"[+] Successfully checked out {local_repo.name}: {branch_output}@{info_output}", flush=True)
+    print(
+        f"[+] Successfully checked out {local_repo.name}: {branch_output}@{info_output}", flush=True
+    )
 
     return local_repo
 
@@ -98,8 +100,10 @@ def parse_arguments():
 
 
 def register_problem_matchers() -> None:
-    repo_root = Path(__file__).resolve().parents[1]
-    for problem_matcher in repo_root.glob('.github/problem-matchers/*'):
+    if 'GITHUB_ACTIONS' not in os.environ:
+        return
+
+    for problem_matcher in Path(os.environ['GITHUB_WORKSPACE']).glob('.github/problem-matchers/*'):
         print(f"::add-matcher::{problem_matcher}")
 
 
@@ -121,7 +125,8 @@ def validate_config(config_file: Path, kconfig_add: list[str]) -> None:
         normalized_val = 'n' if val == 'is not set' else val
         if (existing_val := config_syms.get(sym)) and existing_val != normalized_val:
             print(
-                f"[-] symbol '{sym}' already processed (dict val: '{existing_val}', new val: '{normalized_val}')?", flush=True
+                f"[-] symbol '{sym}' already processed (dict val: '{existing_val}', new val: '{normalized_val}')?",
+                flush=True,
             )
             continue
         config_syms[sym] = normalized_val
@@ -129,10 +134,14 @@ def validate_config(config_file: Path, kconfig_add: list[str]) -> None:
     fail = False
     for sym, expected_val in requested_syms.items():
         if (actual_val := config_syms.get(sym, 'n')) == expected_val:
-            print(f"[+] value of {sym} ('{actual_val}') matched expected value ('{expected_val}')", flush=True)
+            print(
+                f"[+] value of {sym} ('{actual_val}') matched expected value ('{expected_val}')",
+                flush=True,
+            )
         else:
             print(
-                f"[!] value of {sym} ('{actual_val}') does not match expected value ('{expected_val}')!", flush=True
+                f"[!] value of {sym} ('{actual_val}') does not match expected value ('{expected_val}')!",
+                flush=True,
             )
             fail = True
     if fail:
@@ -219,11 +228,15 @@ class Runner:
         results = metadata['results']
         tuxmake_duration = get_duration(0, round(sum(results['duration'].values()), 2))
         if tuxmake_res.failed:
-            print(f"[!] tuxmake failed [duration: {tuxmake_duration}, errors: {results['errors']}]", flush=True)
+            print(
+                f"[!] tuxmake failed [duration: {tuxmake_duration}, errors: {results['errors']}]",
+                flush=True,
+            )
             sys.exit(1)
 
         print(
-            f"[+] tuxmake succeeded [duration: {tuxmake_duration}, warnings: {results['warnings']}]", flush=True
+            f"[+] tuxmake succeeded [duration: {tuxmake_duration}, warnings: {results['warnings']}]",
+            flush=True,
         )
 
         validate_config(output_dir.joinpath('config'), metadata['build']['kconfig_add'])
