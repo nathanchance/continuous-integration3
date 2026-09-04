@@ -129,6 +129,22 @@ jobs:
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
           /work/runner/driver.py -a loongarch -b -k defconfig -l 23 -t linux-next
 
+  build_loongarch_defconfig_lto:
+    name: Build and boot loongarch defconfig + CONFIG_LTO_CLANG_THIN=y
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: loongarch defconfig + CONFIG_LTO_CLANG_THIN=y
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a loongarch -b -k defconfig CONFIG_LTO_CLANG_THIN=y -l 23 -t linux-next
+
   build_mips_malta_defconfig:
     name: Build and boot mips malta_defconfig
     runs-on: [self-hosted, normal]
@@ -224,6 +240,22 @@ jobs:
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
           /work/runner/driver.py -a riscv -b -k defconfig hardening.config -l 23 -t linux-next
+
+  build_riscv_defconfig_lto:
+    name: Build and boot riscv defconfig + CONFIG_LTO_CLANG_THIN=y
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: riscv defconfig + CONFIG_LTO_CLANG_THIN=y
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a riscv -b -k defconfig CONFIG_LTO_CLANG_THIN=y -l 23 -t linux-next
 
   build_s390_defconfig:
     name: Build and boot s390 defconfig
@@ -353,6 +385,22 @@ jobs:
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
           /work/runner/driver.py -a arm64 -b -k https://github.com/ClangBuiltLinux/rpms_kernel/raw/rawhide/kernel-aarch64-fedora.config -l 23 -t linux-next
 
+  build_aarch64_fedora_lto:
+    name: Build and boot aarch64 Fedora configuration + CONFIG_LTO_CLANG_THIN=y
+    runs-on: [self-hosted, big]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: aarch64 Fedora + CONFIG_LTO_CLANG_THIN=y
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm64 -b -k https://github.com/ClangBuiltLinux/rpms_kernel/raw/rawhide/kernel-aarch64-fedora.config CONFIG_LTO_CLANG_THIN=y -l 23 -t linux-next
+
   build_x86_64_archlinux:
     name: Build and boot x86_64 Arch Linux configuration
     runs-on: [self-hosted, big]
@@ -368,3 +416,19 @@ jobs:
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
           /work/runner/driver.py -a x86_64 -b -k https://github.com/ClangBuiltLinux/linux_pkgbuild/raw/main/config.x86_64 -l 23 -t linux-next
+
+  build_x86_64_archlinux_lto:
+    name: Build and boot x86_64 Arch Linux configuration + CONFIG_LTO_CLANG_THIN=y
+    runs-on: [self-hosted, big]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: x86_64 Arch Linux + CONFIG_LTO_CLANG_THIN=y
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a x86_64 -b -k https://github.com/ClangBuiltLinux/linux_pkgbuild/raw/main/config.x86_64 CONFIG_LTO_CLANG_THIN=y -l 23 -t linux-next
