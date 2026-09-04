@@ -33,10 +33,10 @@ def clone_mirror_repo(remote_repo_name: str, local_repo_name: str = '') -> Path:
     local_repo = Path('/', local_repo_name)
     remote_repo = f"{MIRROR_GIT}/{remote_repo_name}.git"
 
-    print(f"[+] Cloning {remote_repo} to {local_repo}", end='')
+    print(f"[+] Cloning {remote_repo} to {local_repo}", end='', flush=True)
     start = time.time()
     subprocess.run(['git', 'clone', '--depth=1', '--quiet', remote_repo, local_repo], check=True)
-    print(f" [duration: {get_duration(start)}]")
+    print(f" [duration: {get_duration(start)}]", flush=True)
 
     info_cmd = ['git', '-C', local_repo, 'show', '-s', '--format=%H ("%s", %cs)']
     info_output = subprocess.run(
@@ -46,7 +46,7 @@ def clone_mirror_repo(remote_repo_name: str, local_repo_name: str = '') -> Path:
     branch_output = subprocess.run(
         branch_cmd, capture_output=True, check=True, text=True
     ).stdout.strip()
-    print(f"[+] Successfully checked out {local_repo.name}: {branch_output}@{info_output}")
+    print(f"[+] Successfully checked out {local_repo.name}: {branch_output}@{info_output}", flush=True)
 
     return local_repo
 
@@ -121,7 +121,7 @@ def validate_config(config_file: Path, kconfig_add: list[str]) -> None:
         normalized_val = 'n' if val == 'is not set' else val
         if (existing_val := config_syms.get(sym)) and existing_val != normalized_val:
             print(
-                f"[-] symbol '{sym}' already processed (dict val: '{existing_val}', new val: '{normalized_val}')?"
+                f"[-] symbol '{sym}' already processed (dict val: '{existing_val}', new val: '{normalized_val}')?", flush=True
             )
             continue
         config_syms[sym] = normalized_val
@@ -129,10 +129,10 @@ def validate_config(config_file: Path, kconfig_add: list[str]) -> None:
     fail = False
     for sym, expected_val in requested_syms.items():
         if (actual_val := config_syms.get(sym, 'n')) == expected_val:
-            print(f"[+] value of {sym} ('{actual_val}') matched expected value ('{expected_val}')")
+            print(f"[+] value of {sym} ('{actual_val}') matched expected value ('{expected_val}')", flush=True)
         else:
             print(
-                f"[!] value of {sym} ('{actual_val}') does not match expected value ('{expected_val}')!"
+                f"[!] value of {sym} ('{actual_val}') does not match expected value ('{expected_val}')!", flush=True
             )
             fail = True
     if fail:
@@ -181,20 +181,20 @@ class Runner:
         # Download and extract toolchain into build container
         self._toolchain_prefix = Path('/', toolchain_tarball.replace('.tar.xz', ''))
         tar_url = f"{MIRROR_HTTP}/toolchains/{toolchain_tarball}"
-        print(f"[+] Downloading {tar_url}", end='')
+        print(f"[+] Downloading {tar_url}", end='', flush=True)
         start = time.time()
         result = requests.get(tar_url, timeout=15)
         result.raise_for_status()
-        print(f" [duration: {get_duration(start)}]")
+        print(f" [duration: {get_duration(start)}]", flush=True)
 
-        print(f"[+] Extracting {toolchain_tarball} to {self._toolchain_prefix}", end='')
+        print(f"[+] Extracting {toolchain_tarball} to {self._toolchain_prefix}", end='', flush=True)
         start = time.time()
         subprocess.run(
             ['tar', '-C', self._toolchain_prefix.parent, '-f', '-', '-J', '-x'],
             check=True,
             input=result.content,
         )
-        print(f" [duration: {get_duration(start)}]")
+        print(f" [duration: {get_duration(start)}]", flush=True)
 
     def _prepare_git(self) -> None:
         self._tuxmake_kwargs['tree'] = clone_mirror_repo(self.tree)
@@ -206,7 +206,7 @@ class Runner:
         # the compiler is in PATH
         os.environ['PATH'] = f"{self._toolchain_prefix}/bin:{os.environ['PATH']}"
 
-        print('[+] Calling tuxmake to build kernel')
+        print('[+] Calling tuxmake to build kernel', flush=True)
         self._tuxmake_kwargs['kconfig'] = self.kconfigs[0]
         self._tuxmake_kwargs['kconfig_add'] += self.kconfigs[1:]
         self._tuxmake_kwargs['target_arch'] = self.arch
@@ -219,11 +219,11 @@ class Runner:
         results = metadata['results']
         tuxmake_duration = get_duration(0, round(sum(results['duration'].values()), 2))
         if tuxmake_res.failed:
-            print(f"[!] tuxmake failed [duration: {tuxmake_duration}, errors: {results['errors']}]")
+            print(f"[!] tuxmake failed [duration: {tuxmake_duration}, errors: {results['errors']}]", flush=True)
             sys.exit(1)
 
         print(
-            f"[+] tuxmake succeeded [duration: {tuxmake_duration}, warnings: {results['warnings']}]"
+            f"[+] tuxmake succeeded [duration: {tuxmake_duration}, warnings: {results['warnings']}]", flush=True
         )
 
         validate_config(output_dir.joinpath('config'), metadata['build']['kconfig_add'])
@@ -242,11 +242,11 @@ class Runner:
 
         output_dir = self._tuxmake_kwargs['output_dir']
         if (dtbs_tar := Path(output_dir, 'dtbs.tar.xz')).exists():
-            print(f"[+] Extracting {dtbs_tar}")
+            print(f"[+] Extracting {dtbs_tar}", flush=True)
             subprocess.run(['tar', '-C', output_dir, '-xJf', dtbs_tar], check=True)
 
         boot_qemu_py = Path(self._boot_utils_path, 'boot-qemu.py')
-        print(f"[+] Running {boot_qemu_py.name}")
+        print(f"[+] Running {boot_qemu_py.name}", flush=True)
         boot_qemu_py_cmd = [
             boot_qemu_py,
             '-a',
@@ -256,7 +256,7 @@ class Runner:
             '-k',
             output_dir,
         ]
-        print(f"$ {' '.join(str(x) for x in boot_qemu_py_cmd)}")
+        print(f"$ {' '.join(str(x) for x in boot_qemu_py_cmd)}", flush=True)
         subprocess.run(boot_qemu_py_cmd, check=True)
 
     def run(self) -> None:
