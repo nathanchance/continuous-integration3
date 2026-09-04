@@ -13,12 +13,12 @@ else
 fi
 
 if [ $# -lt 1 ]; then
-    echo "[-] ERROR: Missing directory name as first argument!" 2>&1
+    echo "[!] Missing directory name as first argument!" 2>&1
     exit 1
 fi
 mkosi_dir="$ci_root/$1"
 if [ ! -d "$mkosi_dir" ]; then
-    echo "[-] ERROR: $mkosi_dir does not exist!"
+    echo "[!] $mkosi_dir does not exist!"
     exit 1
 fi
 shift
