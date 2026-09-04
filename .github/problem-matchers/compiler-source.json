@@ -5,8 +5,8 @@
             "owner": "compiler-source",
             "pattern": [
                 {
-                    "__comment_regexp1": "/builds/linux/arch/x86/include/asm/checksum_32.h:149:6: error: inline assembly requires more registers than available",
-                    "regexp": "^(?:/builds/)?(?:linux/)?(.*):(\\d+):(\\d+):\\s+(?:fatal\\s+)?(warning|error):\\s+(.*)$",
+                    "__comment_regexp1": "/source/arch/x86/include/asm/checksum_32.h:149:6: error: inline assembly requires more registers than available",
+                    "regexp": "^(?:/source/)?(.*):(\\d+):(\\d+):\\s+(?:fatal\\s+)?(warning|error):\\s+(.*)$",
                     "file": 1,
                     "line": 2,
                     "column": 3,

@@ -213,7 +213,7 @@ class Runner:
         print(f" [duration: {get_duration(start)}]", flush=True)
 
     def _prepare_git(self) -> None:
-        self._tuxmake_kwargs['tree'] = clone_mirror_repo(self.tree)
+        self._tuxmake_kwargs['tree'] = clone_mirror_repo(self.tree, local_repo_name='source')
         if self.boot:
             self._boot_utils_path = clone_mirror_repo('boot-utils')
 
