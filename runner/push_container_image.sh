@@ -7,7 +7,7 @@ output=$runner_root/env/mkosi.output/cbl-ci3-build-env
 ghcr_namespace=ghcr.io/nathanchance
 
 if ! command -v skopeo &>/dev/null; then
-    echo '[-] ERROR: skopeo not installed!'
+    echo '[!] skopeo not installed!'
     exit 1
 fi
 
