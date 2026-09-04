@@ -7,9 +7,11 @@
 # ]
 # ///
 
+import json
 import os
 import subprocess
 import sys
+import time
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from pathlib import Path
 from typing import Any
@@ -44,6 +46,26 @@ def clone_mirror_repo(remote_repo_name: str, local_repo_name: str = '') -> Path:
     print(f"[+] Successfully checked out {local_repo.name}: {branch_output}@{info_output}")
 
     return local_repo
+
+
+def get_duration(start_seconds: float, end_seconds: float | None = None) -> str:
+    if not end_seconds:
+        end_seconds = time.time()
+    seconds = int(end_seconds - start_seconds)
+    days, seconds = divmod(seconds, 60 * 60 * 24)
+    hours, seconds = divmod(seconds, 60 * 60)
+    minutes, seconds = divmod(seconds, 60)
+
+    parts = []
+    if days:
+        parts.append(f"{days}d")
+    if hours:
+        parts.append(f"{hours}h")
+    if minutes:
+        parts.append(f"{minutes}m")
+    parts.append(f"{seconds}s")
+
+    return ' '.join(parts)
 
 
 def parse_arguments():
@@ -146,8 +168,20 @@ class Runner:
         self._tuxmake_kwargs['target_arch'] = self.arch
         self._tuxmake_kwargs['targets'].insert(0, 'kernel' if self.boot else 'default')
         self._tuxmake_kwargs['verbose'] = self.verbose
-        if tuxmake.build.build(**self._tuxmake_kwargs).failed:
+        result = tuxmake.build.build(**self._tuxmake_kwargs)
+
+        output_dir = self._tuxmake_kwargs['output_dir']
+        metadata = json.loads(output_dir.joinpath('metadata.json').read_text(encoding='utf-8'))
+        tuxmake_duration = get_duration(0, round(sum(metadata['results']['duration'].values()), 2))
+        if result.failed:
+            print(
+                f"[!] tuxmake failed in {tuxmake_duration} due to {metadata['results']['errors']} error(s)"
+            )
             sys.exit(1)
+
+        print(
+            f"[+] tuxmake succeeded in {tuxmake_duration} with {metadata['results']['warnings']} warning(s)"
+        )
 
     def _boot(self) -> None:
         if not self.boot:
