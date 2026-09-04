@@ -9,6 +9,7 @@
 
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -100,6 +101,42 @@ def register_problem_matchers() -> None:
         print(f"::add-matcher::{problem_matcher}")
 
 
+def validate_config(config_file: Path, kconfig_add: list[str]) -> None:
+    requested_syms = {}
+    for item in kconfig_add:
+        if not item.startswith('CONFIG_'):
+            continue
+        sym, val = item.split('=', 1)
+        requested_syms[sym] = val
+    if not requested_syms:  # no symbols to check
+        return
+
+    config_syms = {}
+    config_txt = config_file.read_text(encoding='utf-8')
+    for sym, val in re.findall(
+        r"^(?:# )?(CONFIG_[^= ]+)(?: |=)(.*)$", config_txt, flags=re.MULTILINE
+    ):
+        normalized_val = 'n' if val == 'is not set' else val
+        if (existing_val := config_syms.get(sym)) and existing_val != normalized_val:
+            print(
+                f"[-] symbol '{sym}' already processed (dict val: '{existing_val}', new val: '{normalized_val}')?"
+            )
+            continue
+        config_syms[sym] = normalized_val
+
+    fail = False
+    for sym, expected_val in requested_syms.items():
+        if (actual_val := config_syms.get(sym, 'n')) == expected_val:
+            print(f"[+] value of {sym} ('{actual_val}') matched expected value ('{expected_val}')")
+        else:
+            print(
+                f"[!] value of {sym} ('{actual_val}') does not match expected value ('{expected_val}')!"
+            )
+            fail = True
+    if fail:
+        sys.exit(1)
+
+
 class Runner:
     def __init__(self) -> None:
         self.arch: str = ''
@@ -182,6 +219,8 @@ class Runner:
         print(
             f"[+] tuxmake succeeded in {tuxmake_duration} with {metadata['results']['warnings']} warning(s)"
         )
+
+        validate_config(output_dir.joinpath('config'), metadata['build']['kconfig_add'])
 
     def _boot(self) -> None:
         if not self.boot:
