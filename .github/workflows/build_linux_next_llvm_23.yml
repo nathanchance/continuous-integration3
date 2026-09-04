@@ -10,6 +10,7 @@ jobs:
     - name: arm multi_v5_defconfig
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -26,6 +27,7 @@ jobs:
     - name: arm aspeed_g5_defconfig
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -42,6 +44,7 @@ jobs:
     - name: arm multi_v7_defconfig
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -58,6 +61,7 @@ jobs:
     - name: arm multi_v7_defconfig + hardening.config
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -74,6 +78,7 @@ jobs:
     - name: arm64 defconfig
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -90,6 +95,7 @@ jobs:
     - name: arm64 defconfig + hardening.config
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -106,6 +112,7 @@ jobs:
     - name: i386 defconfig
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -122,6 +129,7 @@ jobs:
     - name: loongarch defconfig
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -138,6 +146,7 @@ jobs:
     - name: loongarch defconfig + CONFIG_LTO_CLANG_THIN=y
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -154,6 +163,7 @@ jobs:
     - name: mips malta_defconfig
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -170,6 +180,7 @@ jobs:
     - name: mips malta_defconfig (big endian)
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -186,6 +197,7 @@ jobs:
     - name: powerpc ppc64_guest_defconfig
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -202,6 +214,7 @@ jobs:
     - name: powerpc powernv_defconfig
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -218,6 +231,7 @@ jobs:
     - name: riscv defconfig
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -234,6 +248,7 @@ jobs:
     - name: riscv defconfig + hardening.config
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -250,6 +265,7 @@ jobs:
     - name: riscv defconfig + CONFIG_LTO_CLANG_THIN=y
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -266,6 +282,7 @@ jobs:
     - name: s390 defconfig
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -282,6 +299,7 @@ jobs:
     - name: s390 defconfig + hardening.config
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -298,6 +316,7 @@ jobs:
     - name: x86_64 defconfig
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -314,6 +333,7 @@ jobs:
     - name: x86_64 defconfig + hardening.config
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -330,6 +350,7 @@ jobs:
     - name: arm allmodconfig
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -346,6 +367,7 @@ jobs:
     - name: arm64 allmodconfig
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -362,6 +384,7 @@ jobs:
     - name: x86_64 allmodconfig
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -378,6 +401,7 @@ jobs:
     - name: aarch64 Fedora
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -394,6 +418,7 @@ jobs:
     - name: aarch64 Fedora + CONFIG_LTO_CLANG_THIN=y
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -410,6 +435,7 @@ jobs:
     - name: x86_64 Arch Linux
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
@@ -426,6 +452,7 @@ jobs:
     - name: x86_64 Arch Linux + CONFIG_LTO_CLANG_THIN=y
       run: |
         podman run \
+          --env GITHUB_ACTIONS \
           --pull newer \
           --rm \
           --tty \
