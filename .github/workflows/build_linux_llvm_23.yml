@@ -49,6 +49,22 @@ jobs:
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
           /work/runner/driver.py -a arm -b -k multi_v7_defconfig -l 23 -t linux
 
+  build_arm_multi_v7_defconfig_hardening:
+    name: Build and boot arm multi_v7_defconfig + hardening.config
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: arm multi_v7_defconfig + hardening.config
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm -b -k multi_v7_defconfig hardening.config -l 23 -t linux
+
   build_arm64_defconfig:
     name: Build and boot arm64 defconfig
     runs-on: [self-hosted, normal]
@@ -64,6 +80,22 @@ jobs:
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
           /work/runner/driver.py -a arm64 -b -k defconfig -l 23 -t linux
+
+  build_arm64_defconfig_hardening:
+    name: Build and boot arm64 defconfig + hardening.config
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: arm64 defconfig + hardening.config
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm64 -b -k defconfig hardening.config -l 23 -t linux
 
   build_i386_defconfig:
     name: Build and boot i386 defconfig
@@ -177,6 +209,22 @@ jobs:
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
           /work/runner/driver.py -a riscv -b -k defconfig -l 23 -t linux
 
+  build_riscv_defconfig_hardening:
+    name: Build and boot riscv defconfig + hardening.config
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: riscv defconfig + hardening.config
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a riscv -b -k defconfig hardening.config -l 23 -t linux
+
   build_s390_defconfig:
     name: Build and boot s390 defconfig
     runs-on: [self-hosted, normal]
@@ -193,6 +241,22 @@ jobs:
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
           /work/runner/driver.py -a s390 -b -k defconfig -l 23 -t linux
 
+  build_s390_defconfig_hardening:
+    name: Build and boot s390 defconfig + hardening.config
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: s390 defconfig + hardening.config
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a s390 -b -k defconfig hardening.config -l 23 -t linux
+
   build_x86_64_defconfig:
     name: Build and boot x86_64 defconfig
     runs-on: [self-hosted, normal]
@@ -208,6 +272,22 @@ jobs:
           --volume $GITHUB_WORKSPACE:/work:ro \
           ghcr.io/nathanchance/cbl-ci3-build-env:latest \
           /work/runner/driver.py -a x86_64 -b -k defconfig -l 23 -t linux
+
+  build_x86_64_defconfig_hardening:
+    name: Build and boot x86_64 defconfig + hardening.config
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: x86_64 defconfig + hardening.config
+      run: |
+        podman run \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a x86_64 -b -k defconfig hardening.config -l 23 -t linux
 
   build_arm_allmodconfig:
     name: Build arm allmodconfig
