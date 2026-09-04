@@ -3,14 +3,14 @@
 set -eu
 
 if [ "$(id -u)" -ne 0 ]; then
-    echo "[-] ERROR: Not running as root?" 2>&1
+    echo "[!] Not running as root?" 2>&1
     exit 1
 fi
 
 # shellcheck disable=SC1091
 . /usr/lib/os-release
 if [ "$ID" != "debian" ]; then
-    echo "[-] ERROR: Not running on Debian?" 2>&1
+    echo "[!] Not running on Debian?" 2>&1
     exit 1
 fi
 
