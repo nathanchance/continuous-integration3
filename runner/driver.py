@@ -108,7 +108,9 @@ def register_problem_matchers() -> None:
         sys.exit(1)
 
     for problem_matcher in work.glob('.github/problem-matchers/*'):
-        print(f"::add-matcher::{problem_matcher}")
+        print(
+            f"::add-matcher::{str(problem_matcher).replace('/work', os.environ['GITHUB_WORKSPACE'])}"
+        )
 
 
 def validate_config(config_file: Path, kconfig_add: list[str]) -> None:
