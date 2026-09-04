@@ -283,7 +283,7 @@ def create_vm(
         '--vcpus',
         str(num_cpus),
         '--memory',
-        str(num_cpus * 2048),
+        str(num_cpus * 1280),  # 1.25 GB per vCPU
         '--cpu',
         'host-model',
         '--network',
