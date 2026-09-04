@@ -11,6 +11,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -28,6 +29,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -45,6 +47,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -62,6 +65,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -79,6 +83,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -96,6 +101,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -113,6 +119,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -130,6 +137,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -147,6 +155,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -164,6 +173,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -181,6 +191,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -198,6 +209,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -215,6 +227,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -232,6 +245,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -249,6 +263,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -266,6 +281,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -283,6 +299,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -300,6 +317,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -317,6 +335,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -334,6 +353,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -351,6 +371,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -368,6 +389,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -385,6 +407,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -402,6 +425,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -419,6 +443,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -436,6 +461,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
@@ -453,6 +479,7 @@ jobs:
       run: |
         podman run \
           --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
           --pull newer \
           --rm \
           --tty \
