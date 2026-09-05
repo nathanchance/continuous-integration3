@@ -2,6 +2,6 @@
 
 set -eu
 
-fdfind -t . /srv/git -x "rg -l $HOST_MIRROR_MKOSI_EXTRA" | while read item; do
+fdfind -t f . /srv/git -x "rg -l $HOST_MIRROR_MKOSI_EXTRA" | while read item; do
     echo "item: $item"
 done
