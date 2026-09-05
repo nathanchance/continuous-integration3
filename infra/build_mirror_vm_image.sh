@@ -9,6 +9,6 @@ echo "[+] Preparing mirrored assets"
 
 echo "[+] Building mirror virtual machine image"
 "$infra"/build_vm_image.sh \
-    --environment HOST_MIRROR_MKOSI_EXTRA=$infra/vm/mkosi.profiles/mirror/mkosi.extra \
+    --environment HOST_MIRROR_MKOSI_EXTRA="$infra"/vm/mkosi.profiles/mirror/mkosi.extra \
     --profile mirror \
     "$@"
