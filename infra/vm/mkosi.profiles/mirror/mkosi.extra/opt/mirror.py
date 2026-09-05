@@ -54,8 +54,9 @@ def setup_srv_git() -> None:
         grok_log.parent.mkdir(exist_ok=True, parents=True)
         subprocess.run(['grok-pull', '-c', dst_grok_config, '-v'], check=True)
 
-        print('[+] Running grok-fsck')
-        subprocess.run(['grok-fsck', '-c', dst_grok_config, '-f', '-v'], check=True)
+        if not GIT_DIR.joinpath('fsck.status.js').exists():
+            print('[+] Running grok-fsck for first time')
+            subprocess.run(['grok-fsck', '-c', dst_grok_config, '-f', '-v'], check=True)
 
     repo_urls = [
         'https://github.com/ClangBuiltLinux/boot-utils.git',
