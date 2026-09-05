@@ -335,7 +335,7 @@ def create_vm(
     print(f"[+] Waiting up to {limit} seconds for networking to come up...")
     for i in range(1, iterations):
         time.sleep(interval)
-        ip_addr = get_vm_ip_addr(vm_name, required=(i == iterations))
+        ip_addr = get_vm_ip_addr(vm_name, required=i == iterations)
         if ip_addr and vm_name != MIRROR_VM_NAME:
             break
         if vm_name == MIRROR_VM_NAME:
