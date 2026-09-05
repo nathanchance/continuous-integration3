@@ -22,16 +22,23 @@ import tuxmake.build
 
 MIRROR_GIT = 'git://192.168.122.2'
 MIRROR_HTTP = f"{MIRROR_GIT.replace('git', 'http')}:8080"
+
 VALID_LLVM_VERS = tuple(range(23, 21, -1))
 VALID_TREES = ('linux', 'linux-next')
 
 
 def clone_mirror_repo(remote_repo_name: str, local_repo_name: str = '') -> Path:
-    if not local_repo_name:
-        local_repo_name = remote_repo_name
+    repo_name_to_path = {
+        'boot-utils': '/boot-utils.git',
+        'linux': '/pub/scm/linux/kernel/git/torvalds/linux.git',
+        'linux-next': '/pub/scm/linux/kernel/git/next/linux-next.git',
+    }
+    if not (remote_repo_path := repo_name_to_path.get(remote_repo_name)):
+        print(f"[!] Do not know how to clone {remote_repo_name} from mirror!")
+        sys.exit(1)
 
-    local_repo = Path('/', local_repo_name)
-    remote_repo = f"{MIRROR_GIT}/{remote_repo_name}.git"
+    remote_repo = f"{MIRROR_GIT}{remote_repo_path}"
+    local_repo = Path('/', local_repo_name or remote_repo_name)
 
     print(f"[+] Cloning {remote_repo} to {local_repo}", end='', flush=True)
     start = time.time()
