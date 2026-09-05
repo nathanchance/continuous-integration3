@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
+# /// script
+# dependencies = [
+#     "requests>=2.34.2",
+# ]
+# ///
 # This cannot be run via uv because virt-install is a Python program that does
 # not run properly in the isolated virtual environment (which is the biggest
-# benefit of uv)
+# benefit of uv). We include inline script metadata so that 'ty check' can
+# audit the code from a uv virtualenv.
 
 import getpass
 import os
