@@ -51,7 +51,8 @@ def setup_srv_git() -> None:
 
         GIT_DIR.mkdir(exist_ok=True, parents=True)
         grok_log.parent.mkdir(exist_ok=True, parents=True)
-        subprocess.run(['grok-pull', '-c', dst_grok_config], check=True)
+        subprocess.run(['grok-pull', '-c', dst_grok_config, '-v'], check=True)
+        subprocess.run(['grok-fsck', '-c', dst_grok_config, '-f', '-v'], check=True)
 
     repo_urls = [
         'https://github.com/ClangBuiltLinux/boot-utils.git',
