@@ -49,9 +49,12 @@ def setup_srv_git() -> None:
         )
         dst_grok_config.write_text(dst_grok_config_text, encoding='utf-8')
 
+        print('[+] Running grok-pull')
         GIT_DIR.mkdir(exist_ok=True, parents=True)
         grok_log.parent.mkdir(exist_ok=True, parents=True)
         subprocess.run(['grok-pull', '-c', dst_grok_config, '-v'], check=True)
+
+        print('[+] Running grok-fsck')
         subprocess.run(['grok-fsck', '-c', dst_grok_config, '-f', '-v'], check=True)
 
     repo_urls = [
@@ -59,7 +62,8 @@ def setup_srv_git() -> None:
     ]
     for repo_url in repo_urls:
         if (repo := Path(GIT_DIR, Path(repo_url).name)).exists():
-            subprocess.run(['grok-dump-pull', repo], check=True)
+            print(f"[+] Running grok-dumb-pull for {repo.name}")
+            subprocess.run(['grok-dumb-pull', repo], check=True)
             continue
 
         print(f"[+] Cloning {repo_url} to {repo}")
