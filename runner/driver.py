@@ -24,14 +24,16 @@ MIRROR_GIT = 'git://192.168.122.2'
 MIRROR_HTTP = f"{MIRROR_GIT.replace('git', 'http')}:8080"
 
 VALID_LLVM_VERS = tuple(range(23, 21, -1))
-VALID_TREES = ('linux', 'linux-next')
+VALID_STABLE_VERS = ('7.2',)
+VALID_TREES = ('linux', 'linux-next', *[f"linux-stable-{ver}" for ver in VALID_STABLE_VERS])
 
 
-def clone_mirror_repo(remote_repo_name: str, local_repo_name: str = '') -> Path:
+def clone_mirror_repo(remote_repo_name: str, local_repo_name: str = '', branch: str = '') -> Path:
     repo_name_to_path = {
         'boot-utils': '/boot-utils.git',
         'linux': '/pub/scm/linux/kernel/git/torvalds/linux.git',
         'linux-next': '/pub/scm/linux/kernel/git/next/linux-next.git',
+        'linux-stable': '/pub/scm/linux/kernel/git/stable/linux.git',
     }
     if not (remote_repo_path := repo_name_to_path.get(remote_repo_name)):
         print(f"[!] Do not know how to clone {remote_repo_name} from mirror!")
@@ -42,7 +44,10 @@ def clone_mirror_repo(remote_repo_name: str, local_repo_name: str = '') -> Path:
 
     print(f"[+] Cloning {remote_repo} to {local_repo}", end='', flush=True)
     start = time.time()
-    subprocess.run(['git', 'clone', '--depth=1', '--quiet', remote_repo, local_repo], check=True)
+    git_clone_args = ['--depth=1', '--quiet']
+    if branch:
+        git_clone_args.append(f"--branch={branch}")
+    subprocess.run(['git', 'clone', *git_clone_args, remote_repo, local_repo], check=True)
     print(f" [duration: {get_duration(start)}]", flush=True)
 
     info_cmd = ['git', '-C', local_repo, 'show', '-s', '--format=%H ("%s", %cs)']
@@ -220,7 +225,13 @@ class Runner:
         print(f" [duration: {get_duration(start)}]", flush=True)
 
     def _prepare_git(self) -> None:
-        self._tuxmake_kwargs['tree'] = clone_mirror_repo(self.tree, local_repo_name='source')
+        branch = ''
+        if self.tree.startswith('linux-stable'):
+            self.tree, stable_ver = self.tree.rsplit('-', 1)
+            branch = f"linux-{stable_ver}.y"
+        self._tuxmake_kwargs['tree'] = clone_mirror_repo(
+            self.tree, local_repo_name='source', branch=branch
+        )
         if self.boot:
             self._boot_utils_path = clone_mirror_repo('boot-utils')
 
