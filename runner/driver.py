@@ -59,7 +59,7 @@ def clone_mirror_repo(remote_repo_name: str, local_repo_name: str = '', branch: 
         branch_cmd, capture_output=True, check=True, text=True
     ).stdout.strip()
     print(
-        f"[+] Successfully checked out {local_repo.name}: {branch_output}@{info_output}", flush=True
+        f"[+] Successfully checked out {local_repo.name} -> {branch_output} @ {info_output}", flush=True
     )
 
     return local_repo
