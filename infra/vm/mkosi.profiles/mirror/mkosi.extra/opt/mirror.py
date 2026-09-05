@@ -50,7 +50,7 @@ def setup_srv_git() -> None:
         dst_grok_config.write_text(dst_grok_config_text, encoding='utf-8')
 
         GIT_DIR.mkdir(exist_ok=True, parents=True)
-        grok_log.mkdir(exist_ok=True, parents=True)
+        grok_log.parent.mkdir(exist_ok=True, parents=True)
         subprocess.run(['grok-pull', '-c', dst_grok_config], check=True)
 
     repo_urls = [
