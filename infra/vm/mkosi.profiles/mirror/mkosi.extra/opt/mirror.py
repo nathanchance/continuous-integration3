@@ -41,13 +41,16 @@ def setup_srv_git() -> None:
         # can prepared in advanced
         src_grok_config = Path(ROOT, 'etc/grokmirror/grokmirror.conf')
         dst_grok_config = Path(tempdir, src_grok_config.name)
+        grok_log = Path(ROOT, 'var/log/grokmirror/main.log')
+
         src_grok_config_text = src_grok_config.read_text(encoding='utf-8')
         dst_grok_config_text = src_grok_config_text.replace('/srv/git', GIT_DIR.as_posix()).replace(
-            '/var', Path(ROOT, '/var').as_posix()
+            grok_log.as_posix().replace(ROOT.as_posix(), '/'), grok_log.as_posix()
         )
         dst_grok_config.write_text(dst_grok_config_text, encoding='utf-8')
 
         GIT_DIR.mkdir(exist_ok=True, parents=True)
+        grok_log.mkdir(exist_ok=True, parents=True)
         subprocess.run(['grok-pull', '-c', dst_grok_config], check=True)
 
     repo_urls = [
