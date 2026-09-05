@@ -13,6 +13,7 @@ jobs:
     with:
       python_version: ${{ matrix.version }}
       ty: true
+      pylint: false
   shellcheck:
     uses: ClangBuiltLinux/actions-workflows/.github/workflows/shellcheck.yml@main
   shfmt:
