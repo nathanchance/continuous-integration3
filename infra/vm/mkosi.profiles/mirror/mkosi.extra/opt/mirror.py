@@ -35,15 +35,26 @@ def parse_arguments():
 
 
 def setup_srv_git() -> None:
+    print('[+] Preparing git mirror with grokmirror')
+    with TemporaryDirectory() as tempdir:
+        # Pivot grokmirror.conf paths to their location on the host so that it
+        # can prepared in advanced
+        src_grok_config = Path(ROOT, 'etc/grokmirror/grokmirror.conf')
+        dst_grok_config = Path(tempdir, src_grok_config.name)
+        src_grok_config_text = src_grok_config.read_text(encoding='utf-8')
+        dst_grok_config_text = src_grok_config_text.replace('/srv/git', GIT_DIR.as_posix()).replace(
+            '/var', Path(ROOT, '/var').as_posix()
+        )
+        dst_grok_config.write_text(dst_grok_config_text, encoding='utf-8')
+
+        subprocess.run(['grok-pull', '-c', dst_grok_config], check=True)
+
     repo_urls = [
-        'git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git',
-        'git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git',
         'https://github.com/ClangBuiltLinux/boot-utils.git',
     ]
     for repo_url in repo_urls:
         if (repo := Path(GIT_DIR, Path(repo_url).name)).exists():
-            print(f"[+] {repo} exists, updating")
-            subprocess.run(['git', '-C', repo, 'remote', 'update', '-p'], check=True)
+            subprocess.run(['grok-dump-pull', repo], check=True)
             continue
 
         print(f"[+] Cloning {repo_url} to {repo}")

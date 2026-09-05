@@ -1,6 +1,8 @@
 enable enable-linger@.service registry
-enable every-15-minutes@.timer update-git-mirror@srv-git-linux.git update-git-mirror@srv-git-linux\x2dnext.git update-git-mirror@srv-git-boot\x2dutils.git
+enable every-15-minutes@.timer grok-dump-pull@srv-git-boot\x2dutils.git
 enable every-six-hours@.timer update-http-mirror@korg-llvm update-http-mirror@boot-utils-assets update-opt-mirror-py
 enable git-daemon.socket
+enable grok-fsck@.timer grokmirror
+enable grok-pull@.service grokmirror
 enable serve-http-mirror.service
 enable weekly@.timer prune-http-mirror
