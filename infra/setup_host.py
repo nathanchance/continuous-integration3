@@ -218,6 +218,7 @@ def install_packages() -> None:
         'virt-install',
         # mirror.py
         'curl',
+        'grokmirror',
         # push_container_image.sh
         'skopeo',
         # vmm.py
