@@ -1,0 +1,488 @@
+name: build kernels (linux-stable-7.2 / LLVM 23)
+on: workflow_dispatch
+jobs:
+  build_arm_multi_v5_defconfig:
+    name: Build and boot arm multi_v5_defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: arm multi_v5_defconfig
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm -b -k multi_v5_defconfig -l 23 -t linux-stable-7.2
+
+  build_arm_aspeed_g5_defconfig:
+    name: Build and boot arm aspeed_g5_defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: arm aspeed_g5_defconfig
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm -b -k aspeed_g5_defconfig -l 23 -t linux-stable-7.2
+
+  build_arm_multi_v7_defconfig:
+    name: Build and boot arm multi_v7_defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: arm multi_v7_defconfig
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm -b -k multi_v7_defconfig -l 23 -t linux-stable-7.2
+
+  build_arm_multi_v7_defconfig_hardening:
+    name: Build and boot arm multi_v7_defconfig + hardening.config
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: arm multi_v7_defconfig + hardening.config
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm -b -k multi_v7_defconfig hardening.config -l 23 -t linux-stable-7.2
+
+  build_arm64_defconfig:
+    name: Build and boot arm64 defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: arm64 defconfig
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm64 -b -k defconfig -l 23 -t linux-stable-7.2
+
+  build_arm64_defconfig_hardening:
+    name: Build and boot arm64 defconfig + hardening.config
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: arm64 defconfig + hardening.config
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm64 -b -k defconfig hardening.config -l 23 -t linux-stable-7.2
+
+  build_i386_defconfig:
+    name: Build and boot i386 defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: i386 defconfig
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a i386 -b -k defconfig -l 23 -t linux-stable-7.2
+
+  build_loongarch_defconfig:
+    name: Build and boot loongarch defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: loongarch defconfig
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a loongarch -b -k defconfig -l 23 -t linux-stable-7.2
+
+  build_loongarch_defconfig_lto:
+    name: Build and boot loongarch defconfig + CONFIG_LTO_CLANG_THIN=y
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: loongarch defconfig + CONFIG_LTO_CLANG_THIN=y
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a loongarch -b -k defconfig CONFIG_LTO_CLANG_THIN=y -l 23 -t linux-stable-7.2
+
+  build_mips_malta_defconfig:
+    name: Build and boot mips malta_defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: mips malta_defconfig
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a mips -b -k malta_defconfig -l 23 -t linux-stable-7.2
+
+  build_mips_malta_defconfig_be:
+    name: Build and boot mips malta_defconfig (big endian)
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: mips malta_defconfig (big endian)
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a mips -b -k malta_defconfig CONFIG_CPU_BIG_ENDIAN=y -l 23 -t linux-stable-7.2
+
+  build_powerpc_ppc64_guest_defconfig:
+    name: Build and boot powerpc ppc64_guest_defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: powerpc ppc64_guest_defconfig
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a powerpc -b -k ppc64_guest_defconfig -l 23 -t linux-stable-7.2
+
+  build_powerpc_powernv_defconfig:
+    name: Build and boot powerpc powernv_defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: powerpc powernv_defconfig
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a powerpc -b -k powernv_defconfig -l 23 -t linux-stable-7.2
+
+  build_riscv_defconfig:
+    name: Build and boot riscv defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: riscv defconfig
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a riscv -b -k defconfig -l 23 -t linux-stable-7.2
+
+  build_riscv_defconfig_hardening:
+    name: Build and boot riscv defconfig + hardening.config
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: riscv defconfig + hardening.config
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a riscv -b -k defconfig hardening.config -l 23 -t linux-stable-7.2
+
+  build_riscv_defconfig_lto:
+    name: Build and boot riscv defconfig + CONFIG_LTO_CLANG_THIN=y
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: riscv defconfig + CONFIG_LTO_CLANG_THIN=y
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a riscv -b -k defconfig CONFIG_LTO_CLANG_THIN=y -l 23 -t linux-stable-7.2
+
+  build_s390_defconfig:
+    name: Build and boot s390 defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: s390 defconfig
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a s390 -b -k defconfig -l 23 -t linux-stable-7.2
+
+  build_s390_defconfig_hardening:
+    name: Build and boot s390 defconfig + hardening.config
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: s390 defconfig + hardening.config
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a s390 -b -k defconfig hardening.config -l 23 -t linux-stable-7.2
+
+  build_x86_64_defconfig:
+    name: Build and boot x86_64 defconfig
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: x86_64 defconfig
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a x86_64 -b -k defconfig -l 23 -t linux-stable-7.2
+
+  build_x86_64_defconfig_hardening:
+    name: Build and boot x86_64 defconfig + hardening.config
+    runs-on: [self-hosted, normal]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: x86_64 defconfig + hardening.config
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a x86_64 -b -k defconfig hardening.config -l 23 -t linux-stable-7.2
+
+  build_arm_allmodconfig:
+    name: Build arm allmodconfig
+    runs-on: [self-hosted, big]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: arm allmodconfig
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm -k allmodconfig -l 23 -t linux-stable-7.2
+
+  build_arm64_allmodconfig:
+    name: Build arm64 allmodconfig
+    runs-on: [self-hosted, big]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: arm64 allmodconfig
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm64 -k allmodconfig -l 23 -t linux-stable-7.2
+
+  build_x86_64_allmodconfig:
+    name: Build x86_64 allmodconfig
+    runs-on: [self-hosted, big]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: x86_64 allmodconfig
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a x86_64 -k allmodconfig -l 23 -t linux-stable-7.2
+
+  build_aarch64_fedora:
+    name: Build and boot aarch64 Fedora configuration
+    runs-on: [self-hosted, big]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: aarch64 Fedora
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm64 -b -k https://github.com/ClangBuiltLinux/rpms_kernel/raw/rawhide/kernel-aarch64-fedora.config -l 23 -t linux-stable-7.2
+
+  build_aarch64_fedora_lto:
+    name: Build and boot aarch64 Fedora configuration + CONFIG_LTO_CLANG_THIN=y
+    runs-on: [self-hosted, big]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: aarch64 Fedora + CONFIG_LTO_CLANG_THIN=y
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a arm64 -b -k https://github.com/ClangBuiltLinux/rpms_kernel/raw/rawhide/kernel-aarch64-fedora.config CONFIG_LTO_CLANG_THIN=y -l 23 -t linux-stable-7.2
+
+  build_x86_64_archlinux:
+    name: Build and boot x86_64 Arch Linux configuration
+    runs-on: [self-hosted, big]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: x86_64 Arch Linux
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a x86_64 -b -k https://github.com/ClangBuiltLinux/linux_pkgbuild/raw/main/config.x86_64 -l 23 -t linux-stable-7.2
+
+  build_x86_64_archlinux_lto:
+    name: Build and boot x86_64 Arch Linux configuration + CONFIG_LTO_CLANG_THIN=y
+    runs-on: [self-hosted, big]
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v7
+    - name: x86_64 Arch Linux + CONFIG_LTO_CLANG_THIN=y
+      run: |
+        podman run \
+          --env GITHUB_ACTIONS \
+          --env GITHUB_WORKSPACE \
+          --pull newer \
+          --rm \
+          --tty \
+          --volume $GITHUB_WORKSPACE:/work:ro \
+          ghcr.io/nathanchance/cbl-ci3-build-env:latest \
+          /work/runner/driver.py -a x86_64 -b -k https://github.com/ClangBuiltLinux/linux_pkgbuild/raw/main/config.x86_64 CONFIG_LTO_CLANG_THIN=y -l 23 -t linux-stable-7.2
