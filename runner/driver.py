@@ -88,14 +88,21 @@ def get_duration(start_seconds: float, end_seconds: float | None = None) -> str:
 
 def parse_arguments():
     parser = ArgumentParser(
-        description='Build and boot driver', formatter_class=ArgumentDefaultsHelpFormatter
+        description='GitHub Actions driver', formatter_class=ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument('-a', '--arch', required=True, help='Architecture to build')
-    parser.add_argument('-b', '--boot', action='store_true', help='Boot kernel after build')
-    parser.add_argument(
+    subparsers = parser.add_subparsers(dest='action', help='Subcommands', required=True)
+
+    kernel_build_parser = subparsers.add_parser(
+        'kernel-build', help='Perform a kernel build / boot via tuxmake'
+    )
+    kernel_build_parser.add_argument('-a', '--arch', required=True, help='Architecture to build')
+    kernel_build_parser.add_argument(
+        '-b', '--boot', action='store_true', help='Boot kernel after build'
+    )
+    kernel_build_parser.add_argument(
         '-k', '--kconfigs', required=True, nargs='+', help='Kconfig values for tuxmake'
     )
-    parser.add_argument(
+    kernel_build_parser.add_argument(
         '-l',
         '--llvm-version',
         choices=VALID_LLVM_VERS,
@@ -103,12 +110,13 @@ def parse_arguments():
         type=int,
         help='LLVM version to build with',
     )
-    parser.add_argument(
+    kernel_build_parser.add_argument(
         '-t', '--tree', choices=VALID_TREES, default=VALID_TREES[0], help='Tree to build'
     )
-    parser.add_argument(
+    kernel_build_parser.add_argument(
         '-v', '--verbose', action='store_true', help='Perform verbose build in tuxmake'
     )
+
     return parser.parse_args()
 
 
@@ -362,33 +370,38 @@ class RISCVRunner(Runner):
         super()._build()
 
 
-def main() -> None:
-    args = parse_arguments()
-
+def assert_container_env() -> None:
     try:
         subprocess.run(['systemd-detect-virt', '-c'], capture_output=True, check=True, text=True)
     except subprocess.CalledProcessError as err:
         msg = f"Not running driver.py in a container? systemd-detect-virt shows '{err.stdout.strip()}'"
         raise RuntimeError(msg) from err
 
-    register_problem_matchers()
 
-    arch_runners = {
-        'arm': ARMRunner,
-        'i386': I386Runner,
-        'mips': MipsRunner,
-        'powerpc': PowerPCRunner,
-        'riscv': RISCVRunner,
-    }
-    runner: Runner = arch_runners.get(args.arch, Runner)()
-    runner.arch = args.arch
-    runner.boot = args.boot
-    runner.kconfigs = args.kconfigs
-    runner.llvm_version = args.llvm_version
-    runner.tree = args.tree
-    runner.verbose = args.verbose
+def main() -> None:
+    args = parse_arguments()
 
-    runner.run()
+    if args.action == 'kernel-build':
+        assert_container_env()
+
+        register_problem_matchers()
+
+        arch_runners = {
+            'arm': ARMRunner,
+            'i386': I386Runner,
+            'mips': MipsRunner,
+            'powerpc': PowerPCRunner,
+            'riscv': RISCVRunner,
+        }
+        runner: Runner = arch_runners.get(args.arch, Runner)()
+        runner.arch = args.arch
+        runner.boot = args.boot
+        runner.kconfigs = args.kconfigs
+        runner.llvm_version = args.llvm_version
+        runner.tree = args.tree
+        runner.verbose = args.verbose
+
+        runner.run()
 
 
 if __name__ == '__main__':
