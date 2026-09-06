@@ -66,6 +66,13 @@ def parse_arguments():
         type=int,
     )
     create_parser.add_argument(
+        '-s',
+        '--small',
+        default=0,
+        help='Number of small builder VMs to create (default: none)',
+        type=int,
+    )
+    create_parser.add_argument(
         '--skip-ssh',
         action='store_true',
         help='Do not ssh into virtual machines automatically after creation',
@@ -87,7 +94,9 @@ def parse_arguments():
         action='store_true',
         help='Pass GITHUB_TOKEN via systemd-creds to virtual machine',
     )
-    recreate_parser.add_argument('type', choices=('big', 'normal'), help='Type of virtual machine')
+    recreate_parser.add_argument(
+        'type', choices=('small', 'big', 'normal'), help='Type of virtual machine'
+    )
     recreate_parser.add_argument('num', help='Virtual machine number', type=int)
 
     ssh_parser = subparsers.add_parser('ssh', help='ssh into virtual machine')
@@ -123,8 +132,8 @@ def parse_arguments():
 
     args = parser.parse_args()
 
-    if args.action == 'create' and not (args.mirror or args.normal or args.big):
-        parser.error('At least one of [-b | -m | -n] must be specified when creating a VM!')
+    if args.action == 'create' and not (args.mirror or args.small or args.normal or args.big):
+        parser.error('At least one of [-b | -m | -n | -s] must be specified when creating a VM!')
 
     return args
 
@@ -196,9 +205,14 @@ def virsh_dumpxml(vm_name: str) -> ElementTree:
 
 
 def create_builder_vms(
-    num_normal: int, num_big: int, skip_ssh: bool = False, github_token: str = '', base: int = 0
+    num_small: int,
+    num_normal: int,
+    num_big: int,
+    skip_ssh: bool = False,
+    github_token: str = '',
+    base: int = 0,
 ) -> None:
-    if num_normal == 0 and num_big == 0:
+    if (num_small, num_normal, num_big) == (0, 0, 0):
         return
 
     # Prechecks
@@ -209,13 +223,20 @@ def create_builder_vms(
         msg = f"Base VM image ('{base_image}') does not exist, run {MKOSI_OUTPUT.parents[1]}/build_base_builder_vm_image.sh!"
         raise RuntimeError(msg)
 
-    if base > 0 and num_normal > 0 and num_big > 0:
-        msg = "Non-zero base with non-zero number of both big and normal VMs requested is invalid!"
+    more_than_two_num = (
+        (num_small, num_normal) > (0, 0)
+        or (num_normal, num_big) > (0, 0)
+        or (num_small, num_big) > (0, 0)
+    )
+    if base > 0 and more_than_two_num:
+        msg = (
+            "Non-zero base with non-zero number of big, normal, and small VMs requested is invalid!"
+        )
         raise RuntimeError(msg)
 
     # VMs are created sequentially, get first free slot based on number of VMs
     new_vms = []
-    for vm_type, num_new_vms in (('normal', num_normal), ('big', num_big)):
+    for vm_type, num_new_vms in (('small', num_small), ('normal', num_normal), ('big', num_big)):
         new_base_vm_name = f"{BASE_BUILDER_VM_NAME}-{vm_type}"
         if num_new_vms:
             if base > 0:
@@ -281,7 +302,15 @@ def create_vm(
 
     # Install using 'virt-install'
     print(f"[+] Running virt-install for {vm_name}...")
-    num_cpus = 12 if vm_name.rsplit('-', 2)[1] == 'big' else 8
+    if (vm_type := vm_name.rsplit('-', 2)[1]) == 'big':
+        num_cpus = 12
+    elif vm_type == 'normal':
+        num_cpus = 8
+    elif vm_type == 'small':
+        num_cpus = 4
+    else:
+        msg = f"Unable to handle virtual machine type ('{vm_type}')!"
+        raise RuntimeError(msg)
     virt_install_cmd = [
         'virt-install',
         '--name',
@@ -517,7 +546,9 @@ def main():
         github_token = get_github_token() if args.github_token else ''
         if args.mirror:
             create_mirror_vm(args.skip_ssh)
-        create_builder_vms(args.normal, args.big, args.skip_ssh, github_token=github_token)
+        create_builder_vms(
+            args.small, args.normal, args.big, args.skip_ssh, github_token=github_token
+        )
 
     if args.action == 'delete':
         if not (vms := args.vms):
@@ -534,6 +565,7 @@ def main():
         github_token = get_github_token() if args.github_token else ''
         delete_vms([f"{BASE_BUILDER_VM_NAME}-{args.type}-{args.num}"], check=False)
         create_builder_vms(
+            1 if args.type == 'small' else 0,
             1 if args.type == 'normal' else 0,
             1 if args.type == 'big' else 0,
             base=args.num,
