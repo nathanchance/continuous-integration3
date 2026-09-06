@@ -1,0 +1,43 @@
+tree = "linux-next"
+llvm_version = "23"
+builds = [
+    { arch = "arm", kconfigs = [ "multi_v5_defconfig" ] },
+    { arch = "arm", kconfigs = [ "aspeed_g5_defconfig" ] },
+    { arch = "arm", kconfigs = [ "multi_v7_defconfig" ] },
+    { arch = "arm", kconfigs = [ "multi_v7_defconfig", "CONFIG_THUMB2_KERNEL=y" ] },
+    { arch = "arm", kconfigs = [ "multi_v7_defconfig", "hardening.config" ] },
+    { arch = "arm", boot = false, kconfigs = [ "allmodconfig" ] },
+    { arch = "arm", boot = false, kconfigs = [ "allnoconfig" ] },
+
+    { arch = "arm64", kconfigs = [ "virtconfig" ] },
+    { arch = "arm64", kconfigs = [ "defconfig" ] },
+    { arch = "arm64", kconfigs = [ "defconfig", "hardening.config" ] },
+    { arch = "arm64", boot = false, kconfigs = [ "allmodconfig" ] },
+    { arch = "arm64", boot = false, kconfigs = [ "allnoconfig" ] },
+    { arch = "arm64", kconfigs = [ "https://github.com/ClangBuiltLinux/rpms_kernel/raw/rawhide/kernel-aarch64-fedora.config" ], pretty-name = "arm64 Fedora" },
+    { arch = "arm64", kconfigs = [ "https://github.com/ClangBuiltLinux/rpms_kernel/raw/rawhide/kernel-aarch64-fedora.config", "CONFIG_LTO_CLANG_THIN=y" ], pretty-name = "arm64 Fedora + LTO" },
+
+    { arch = "i386", kconfigs = [ "defconfig" ] },
+
+    { arch = "loongarch", kconfigs = [ "defconfig" ] },
+    { arch = "loongarch", kconfigs = [ "defconfig", "CONFIG_LTO_CLANG_THIN=y" ] },
+
+    { arch = "mips", kconfigs = [ "malta_defconfig" ] },
+    { arch = "mips", kconfigs = [ "malta_defconfig", "CONFIG_CPU_BIG_ENDIAN=y" ] },
+
+    { arch = "powerpc", kconfigs = [ "ppc64_guest_defconfig" ] },
+    { arch = "powerpc", kconfigs = [ "powernv_defconfig" ] },
+
+    { arch = "riscv", kconfigs = [ "defconfig" ] },
+    { arch = "riscv", kconfigs = [ "defconfig", "hardening.config" ] },
+    { arch = "riscv", kconfigs = [ "defconfig", "CONFIG_LTO_CLANG_THIN=y" ] },
+
+    { arch = "s390", kconfigs = [ "defconfig" ] },
+    { arch = "s390", kconfigs = [ "defconfig", "hardening.config" ] },
+
+    { arch = "x86_64", kconfigs = [ "defconfig" ] },
+    { arch = "x86_64", kconfigs = [ "defconfig", "hardening.config" ] },
+    { arch = "x86_64", boot = false, kconfigs = [ "allmodconfig" ] },
+    { arch = "x86_64", kconfigs = [ "https://github.com/ClangBuiltLinux/linux_pkgbuild/raw/main/config.x86_64" ], pretty-name = "x86_64 Arch Linux" },
+    { arch = "x86_64", kconfigs = [ "https://github.com/ClangBuiltLinux/linux_pkgbuild/raw/main/config.x86_64", "CONFIG_LTO_CLANG_THIN=y" ], pretty-name = "x86_64 Arch Linux + LTO" },
+]
