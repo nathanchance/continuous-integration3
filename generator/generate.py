@@ -45,7 +45,7 @@ class Workflow:
                 '--tty',
                 '--volume', '$GITHUB_WORKSPACE:/work:ro',
                 'ghcr.io/nathanchance/ci3-kernel-build-env:latest',
-                '/work/runner/driver.py',
+                '/work/runner/driver.py', 'kernel-build',
                 '-a', arch,
                 '-k', *kconfigs,
                 '-l', self.llvm_version,
