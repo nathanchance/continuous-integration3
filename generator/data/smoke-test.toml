@@ -1,0 +1,29 @@
+tree = "linux"
+llvm_version = "23"
+pretty-name = "smoke test (linux / LLVM 23)"
+output-name = "smoke-test"
+builds = [
+    { arch = "arm", kconfigs = [ "multi_v5_defconfig" ] },
+    { arch = "arm", kconfigs = [ "aspeed_g5_defconfig" ] },
+    { arch = "arm", kconfigs = [ "multi_v7_defconfig" ] },
+
+    { arch = "arm64", kconfigs = [ "defconfig" ] },
+    { arch = "arm64", boot = false, kconfigs = [ "allmodconfig" ] },
+
+    { arch = "i386", kconfigs = [ "defconfig" ] },
+
+    { arch = "loongarch", kconfigs = [ "defconfig" ] },
+
+    { arch = "mips", kconfigs = [ "malta_defconfig" ] },
+    { arch = "mips", kconfigs = [ "malta_defconfig", "CONFIG_CPU_BIG_ENDIAN=y" ] },
+
+    { arch = "powerpc", kconfigs = [ "ppc64_guest_defconfig" ] },
+    { arch = "powerpc", kconfigs = [ "powernv_defconfig" ] },
+
+    { arch = "riscv", kconfigs = [ "defconfig" ] },
+
+    { arch = "s390", kconfigs = [ "defconfig" ] },
+
+    { arch = "x86_64", kconfigs = [ "defconfig" ] },
+    { arch = "x86_64", boot = false, kconfigs = [ "allmodconfig" ] },
+]
