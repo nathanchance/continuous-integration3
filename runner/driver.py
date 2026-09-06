@@ -176,7 +176,7 @@ def validate_config(config_file: Path, kconfig_add: list[str]) -> None:
         sys.exit(1)
 
 
-class Runner:
+class KernelRunner:
     def __init__(self) -> None:
         self.arch: str = ''
         self.boot: bool = False
@@ -322,7 +322,7 @@ class Runner:
         self._boot()
 
 
-class ARMRunner(Runner):
+class ARMKernelRunner(KernelRunner):
     def _boot(self) -> None:
         if 'multi_v5_defconfig' in self.kconfigs:
             self._boot_utils_arch = 'arm32_v5'
@@ -336,13 +336,13 @@ class ARMRunner(Runner):
         super()._build()
 
 
-class I386Runner(Runner):
+class I386KernelRunner(KernelRunner):
     def _boot(self) -> None:
         self._boot_utils_arch = 'x86'
         super()._boot()
 
 
-class MipsRunner(Runner):
+class MipsKernelRunner(KernelRunner):
     def _boot(self) -> None:
         self._boot_utils_arch = 'mips' if 'CONFIG_CPU_BIG_ENDIAN=y' in self.kconfigs else 'mipsel'
         super()._boot()
@@ -352,7 +352,7 @@ class MipsRunner(Runner):
         super()._build()
 
 
-class PowerPCRunner(Runner):
+class PowerPCKernelRunner(KernelRunner):
     def _boot(self) -> None:
         self._boot_utils_arch = 'ppc64' if 'ppc64_guest_defconfig' in self.kconfigs else 'ppc64le'
         super()._boot()
@@ -364,7 +364,7 @@ class PowerPCRunner(Runner):
         super()._build()
 
 
-class RISCVRunner(Runner):
+class RISCVKernelRunner(KernelRunner):
     def _build(self) -> None:
         self._tuxmake_kwargs['kernel_image'] = 'Image'
         super()._build()
@@ -387,13 +387,13 @@ def main() -> None:
         register_problem_matchers()
 
         arch_runners = {
-            'arm': ARMRunner,
-            'i386': I386Runner,
-            'mips': MipsRunner,
-            'powerpc': PowerPCRunner,
-            'riscv': RISCVRunner,
+            'arm': ARMKernelRunner,
+            'i386': I386KernelRunner,
+            'mips': MipsKernelRunner,
+            'powerpc': PowerPCKernelRunner,
+            'riscv': RISCVKernelRunner,
         }
-        runner: Runner = arch_runners.get(args.arch, Runner)()
+        runner: KernelRunner = arch_runners.get(args.arch, KernelRunner)()
         runner.arch = args.arch
         runner.boot = args.boot
         runner.kconfigs = args.kconfigs
