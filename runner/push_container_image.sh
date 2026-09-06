@@ -3,7 +3,9 @@
 set -eu
 
 runner_root=$(readlink -f "$(dirname "$0")")
-output=$runner_root/env/mkosi.output/cbl-ci3-build-env
+profile=$1
+shift
+output=$runner_root/env/mkosi.output/ci3-$profile-build-env
 ghcr_namespace=ghcr.io/nathanchance
 
 if ! command -v skopeo &>/dev/null; then
@@ -12,7 +14,7 @@ if ! command -v skopeo &>/dev/null; then
 fi
 
 if [ ! -d "$output" ]; then
-    "$runner_root"/build_container_image.sh "$@"
+    "$runner_root"/build_container_image.sh "$profile" "$@"
 fi
 
 if ! skopeo login --get-login ghcr.io &>/dev/null; then

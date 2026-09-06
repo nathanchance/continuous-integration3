@@ -1,4 +1,4 @@
-name: build and push runner container image
+name: build and push runner container images
 on:
   pull_request:
     paths:
@@ -22,8 +22,8 @@ on:
         type: boolean
 
 jobs:
-  build_and_push_container_image:
-    name: Build and push runner container image
+  build_and_push_kernel_container_image:
+    name: Build and push runner container images
     permissions:
       contents: read
       packages: write
@@ -35,11 +35,11 @@ jobs:
       - name: Setup mkosi
         uses: systemd/mkosi@main
 
-      - name: Build container image
-        run: runner/build_container_image.sh
+      - name: Build kernel container image
+        run: runner/build_container_image.sh kernel
 
-      - name: Push container image
+      - name: Push kernel container image
         if: ${{ github.repository_owner == 'nathanchance' && ((github.event_name == 'workflow_dispatch' && github.event.inputs.push_image == 'true') || github.event_name == 'schedule') }}
-        run: runner/push_container_image.sh
+        run: runner/push_container_image.sh kernel
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
