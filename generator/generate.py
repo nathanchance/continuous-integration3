@@ -44,7 +44,7 @@ class Workflow:
                 '--rm',
                 '--tty',
                 '--volume', '$GITHUB_WORKSPACE:/work:ro',
-                'ghcr.io/nathanchance/cbl-ci3-build-env:latest',
+                'ghcr.io/nathanchance/ci3-kernel-build-env:latest',
                 '/work/runner/driver.py',
                 '-a', arch,
                 '-k', *kconfigs,
