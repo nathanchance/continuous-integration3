@@ -313,33 +313,21 @@ def create_vm(
         raise RuntimeError(msg)
     virt_install_cmd = [
         'virt-install',
-        '--name',
-        vm_name,
-        '--vcpus',
-        str(num_cpus),
-        '--memory',
-        str(num_cpus * 1280),  # 1.25 GB per vCPU
-        '--cpu',
-        'host-model',
-        '--network',
-        'network=default',
-        '--boot',
-        'uefi,firmware.feature0.name=secure-boot,firmware.feature0.enabled=no',
-        '--osinfo',
-        'debian13',
-        '--disk',
-        dst_image,
+        '--name', vm_name,
+        '--vcpus', str(num_cpus),
+        '--memory', str(num_cpus * 1280),  # 1.25 GB per vCPU
+        '--cpu', 'host-model',
+        '--network', 'network=default',
+        '--boot', 'uefi,firmware.feature0.name=secure-boot,firmware.feature0.enabled=no',
+        '--osinfo', 'debian13',
+        '--disk', dst_image,
         '--import',
-        '--virt-type',
-        'kvm',
-        '--console',
-        'pty,target_type=serial',
-        '--graphics',
-        'none',
-        '--autoconsole',
-        'none',
+        '--virt-type', 'kvm',
+        '--console', 'pty,target_type=serial',
+        '--graphics', 'none',
+        '--autoconsole', 'none',
         '--autostart',
-    ]
+    ]  # fmt: skip
     if github_token:
         if skip_ssh:
             print(
@@ -466,15 +454,12 @@ def get_vm_ip_addr(vm_name: str, required: bool = False) -> str:
 def call_ssh(ip_addr: str, cmd: str = '') -> None:
     ssh_cmd = [
         'ssh',
-        '-i',
-        f"{ADMIN_HOME}/.ssh/id_ed25519",
-        '-o',
-        'StrictHostKeyChecking=no',
-        '-o',
-        'UserKnownHostsFile=/dev/null',
+        '-i', f"{ADMIN_HOME}/.ssh/id_ed25519",
+        '-o', 'StrictHostKeyChecking=no',
+        '-o', 'UserKnownHostsFile=/dev/null',
         '-t',
         f"root@{ip_addr}",
-    ]
+    ]  # fmt: skip
     if cmd:
         ssh_cmd.append(cmd)
     subprocess.run(ssh_cmd, check=True)
