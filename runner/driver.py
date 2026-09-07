@@ -51,26 +51,35 @@ def get_duration(start_seconds: float, end_seconds: float | None = None) -> str:
 class MirrorRepo:
     def __init__(self, tree: str, local_path: Path | None = None, revision: str = '') -> None:
         tree_to_repo = {
-            'boot-utils': '/boot-utils.git',
-            'linux': '/pub/scm/linux/kernel/git/torvalds/linux.git',
-            'linux-next': '/pub/scm/linux/kernel/git/next/linux-next.git',
-            'linux-stable': '/pub/scm/linux/kernel/git/stable/linux.git',
+            'boot-utils': {
+                'url': '/boot-utils.git',
+                'branch': 'main',
+            },
+            'linux': {
+                'url': '/pub/scm/linux/kernel/git/torvalds/linux.git',
+            },
+            'linux-next': {
+                'url': '/pub/scm/linux/kernel/git/next/linux-next.git',
+            },
+            'linux-stable': {
+                'url': '/pub/scm/linux/kernel/git/stable/linux.git',
+            },
         }
 
         # normalize 'linux-stable-x.y' into 'linux-stable' tree with 'linux-x.y' branch
         if tree.startswith('linux-stable'):
-            self.tree, stable_ver = tree.rsplit('-', 1)
-            self.branch: str = f"linux-{stable_ver}.y"
-        else:
-            self.tree: str = tree
-            self.branch: str = ''
-        self.revision: str = revision
+            tree, stable_ver = tree.rsplit('-', 1)
+            tree_to_repo[tree]['branch'] = f"linux-{stable_ver}.y"
 
-        if self.tree not in tree_to_repo:
+        if not (tree_data := tree_to_repo.get(tree)):
             print(f"[!] Provided tree ('{tree}') does not exist on mirror!")
             sys.exit(1)
 
-        self.remote_path: str = f"{MIRROR_GIT}{tree_to_repo[self.tree]}"
+        self.tree: str = tree
+        self.branch: str = tree_data.get('branch', 'master')
+        self.revision: str = revision
+
+        self.remote_path: str = f"{MIRROR_GIT}{tree_data['url']}"
         self.local_path: Path = local_path or Path('/', self.tree)
 
     def _git(self, cmd: list[str]) -> subprocess.CompletedProcess:
@@ -104,6 +113,24 @@ class MirrorRepo:
 
         return self.local_path
 
+    def gen_revision(self) -> None:
+        latest_revision = (
+            subprocess.run(
+                ['git', 'ls-remote', self.remote_path, self.branch],
+                capture_output=True,
+                check=True,
+                text=True,
+            )
+            .stdout.splitlines()[0]
+            .split('\t', 1)[0]
+        )
+
+        if 'GITHUB_ACTIONS' in os.environ:
+            with Path(os.environ['GITHUB_OUTPUT']).open('a', encoding='utf-8') as f:
+                f.write(f"revision={latest_revision}\n")
+        else:
+            print(latest_revision)
+
 
 def parse_arguments():
     parser = ArgumentParser(
@@ -136,6 +163,11 @@ def parse_arguments():
     kernel_build_parser.add_argument(
         '-v', '--verbose', action='store_true', help='Perform verbose build in tuxmake'
     )
+
+    gen_rev_parser = subparsers.add_parser(
+        'gen-revision', help='Generate git sha to be used as consistent revision throughout build'
+    )
+    gen_rev_parser.add_argument('tree', choices=VALID_TREES, help='Tree to generate revision for')
 
     return parser.parse_args()
 
@@ -418,6 +450,9 @@ def main() -> None:
         runner.verbose = args.verbose
 
         runner.run()
+
+    if args.action == 'gen-revision':
+        MirrorRepo(args.tree).gen_revision()
 
 
 if __name__ == '__main__':
