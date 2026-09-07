@@ -505,7 +505,7 @@ class LLVMRunner:
 
         print('[+] Building stage one toolchain for initial qualification')
         stage_one_tc_cmd = [*self.base_build_llvm_cmd, '--build-stage1-only']
-        print(f"$ {' '.join(stage_one_tc_cmd)}")
+        print(f"$ {' '.join(map(str, stage_one_tc_cmd))}")
         subprocess.run(stage_one_tc_cmd, check=True)
 
     def run(self) -> None:
