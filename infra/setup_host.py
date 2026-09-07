@@ -130,15 +130,11 @@ def configure_libvirt() -> None:
 
         print(f"[+] Configuring libvirt pool at {libvirt_store}")
         virsh_cmd = [
-            'virsh',
-            'pool-define-as',
-            '--name',
-            'default',
-            '--type',
-            'dir',
-            '--target',
-            libvirt_store,
-        ]
+            'virsh', 'pool-define-as',
+            '--name', 'default',
+            '--type', 'dir',
+            '--target', libvirt_store,
+        ]  # fmt: skip
         subprocess.run(virsh_cmd, check=True)
         subprocess.run(['virsh', 'pool-autostart', 'default'], check=True)
         subprocess.run(['virsh', 'pool-start', 'default'], check=True)
@@ -181,15 +177,12 @@ def create_user() -> None:
         adduser_cmd = [
             '/usr/sbin/adduser',
             '--add-extra-groups',
-            '--comment',
-            'ClangBuiltLinux Administrator',
-            '--conf',
-            adduser_conf,
+            '--comment', 'ClangBuiltLinux Administrator',
+            '--conf', adduser_conf,
             '--disabled-password',
-            '--shell',
-            '/bin/bash',
+            '--shell', '/bin/bash',
             ADMIN_NAME,
-        ]
+        ]  # fmt: skip
         subprocess.run(adduser_cmd, check=True)
 
 
