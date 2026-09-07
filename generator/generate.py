@@ -17,6 +17,19 @@ GENERATOR_ROOT = Path(__file__).resolve().parent
 
 
 class Workflow:
+    PODMAN_RUN_DRIVER = (
+        'podman', 'run',
+        '--env', 'GITHUB_ACTIONS',
+        '--env', 'GITHUB_WORKSPACE',
+        '--pull', 'newer',
+        '--quiet',
+        '--rm',
+        '--tty',
+        '--volume', '$GITHUB_WORKSPACE:/work:ro',
+        'ghcr.io/nathanchance/ci3-kernel-build-env:latest',
+        '/work/runner/driver.py',
+    )  # fmt:skip
+
     def __init__(self, config: dict[str, Any]) -> None:
         self.tree: str = config['tree']
         self.llvm_version: str = config['llvm_version']
@@ -26,6 +39,26 @@ class Workflow:
             'pretty-name', f"{self.tree} / LLVM {self.llvm_version}"
         )
         self._output_name = config.get('output-name', f"{self.tree}-llvm-{self.llvm_version}")
+
+    def _generate_initial_checks_job(self) -> dict[str, dict[str, Any]]:
+        return {
+            'initial_checks': {
+                'name': 'Initial checks',
+                'runs-on': ['self-hosted', 'small'],
+                'outputs': {'revision': '${{ steps.genrev.outputs.revision }}'},
+                'steps': [
+                    {
+                        'name': 'Clone continuous-integration3',
+                        'uses': 'actions/checkout@v7',
+                    },
+                    {
+                        'name': f"Generate pinned revision for {self.tree}",
+                        'id': 'genrev',
+                        'run': f"echo \"revision=$({' '.join(self.PODMAN_RUN_DRIVER)} gen-revision {self.tree})\" >>\"$GITHUB_OUTPUT\"",
+                    },
+                ],
+            },
+        }
 
     def _generate_build_jobs(self) -> dict[str, dict[str, Any]]:
         jobs = {}
@@ -37,19 +70,12 @@ class Workflow:
             pretty_job_name = build.get('pretty-name', f"{arch} {' + '.join(kconfigs)}")
 
             podman_run_cmd = [
-                'podman', 'run',
-                '--env', 'GITHUB_ACTIONS',
-                '--env', 'GITHUB_WORKSPACE',
-                '--pull', 'newer',
-                '--rm',
-                '--tty',
-                '--volume', '$GITHUB_WORKSPACE:/work:ro',
-                'ghcr.io/nathanchance/ci3-kernel-build-env:latest',
-                '/work/runner/driver.py', 'kernel-build',
+                *self.PODMAN_RUN_DRIVER, 'kernel-build',
                 '-a', arch,
                 '-k', *kconfigs,
                 '-l', self.llvm_version,
-                '-t', self.tree
+                '-t', self.tree,
+                '-r', '${{ needs.initial_checks.outputs.revision }}',
             ]  # fmt: skip
             if boot:
                 podman_run_cmd.insert(podman_run_cmd.index('-k'), '-b')
@@ -62,6 +88,7 @@ class Workflow:
             jobs[job_id] = {
                 'name': pretty_job_name,
                 'runs-on': ['self-hosted', machine_type],
+                'needs': ['initial_checks'],
                 'steps': [
                     {
                         'name': 'Clone continuous-integration3',
@@ -86,7 +113,10 @@ class Workflow:
             'name': self._pretty_workflow_name,
             'on': 'workflow_dispatch',
             'permissions': 'read-all',
-            'jobs': self._generate_build_jobs(),
+            'jobs': {
+                **self._generate_initial_checks_job(),
+                **self._generate_build_jobs(),
+            },
         }
         workflow_text = yaml.dump(workflow, Dumper=yaml.Dumper, width=1000, sort_keys=False)
 
