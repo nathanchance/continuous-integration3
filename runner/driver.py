@@ -86,10 +86,10 @@ class MirrorRepo:
         self.remote_path: str = f"{MIRROR_GIT}{tree_data['url']}"
         self.local_path: Path = local_path or Path('/', self.tree)
 
-    def _git_quiet(self, cmd: list[Path | str], **kwargs) -> subprocess.CompletedProcess:
-        return self._git(cmd, capture_output=True, **kwargs)
+    def git_quiet(self, cmd: list[Path | str], **kwargs) -> subprocess.CompletedProcess:
+        return self.git(cmd, capture_output=True, **kwargs)
 
-    def _git(self, cmd: list[Path | str], **kwargs) -> subprocess.CompletedProcess:
+    def git(self, cmd: list[Path | str], **kwargs) -> subprocess.CompletedProcess:
         return subprocess.run(['git', '-C', self.local_path, *cmd], check=True, text=True, **kwargs)
 
     def clone(self) -> Path:
@@ -109,8 +109,8 @@ class MirrorRepo:
         subprocess.run([*git_clone_cmd, self.remote_path, self.local_path], check=True)
         print(f" [duration: {get_duration(start)}]", flush=True)
 
-        head_info = self._git_quiet(['show', '-s', '--format=%H ("%s", %cs)']).stdout.strip()
-        branch = self._git_quiet(['rev-parse', '--abbrev-ref', 'HEAD']).stdout.strip()
+        head_info = self.git_quiet(['show', '-s', '--format=%H ("%s", %cs)']).stdout.strip()
+        branch = self.git_quiet(['rev-parse', '--abbrev-ref', 'HEAD']).stdout.strip()
         print(
             f"[+] Successfully checked out {self.local_path.name} -> {branch} @ {head_info}",
             flush=True,
@@ -157,7 +157,7 @@ class MirrorRepo:
         }  # fmt: skip
 
         print(f"[+] Applying patches in {self.patches_dir} to {self.local_path}")
-        self._git(['am', '-3', *patches], env=git_commit_env_vars)
+        self.git(['am', '-3', *patches], env=git_commit_env_vars)
 
 
 def parse_arguments():
