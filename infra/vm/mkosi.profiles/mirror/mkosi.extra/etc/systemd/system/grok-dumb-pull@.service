@@ -1,5 +1,5 @@
 [Unit]
-Description=grok-dump-pull %f
+Description=grok-dumb-pull %f
 After=network.target
 
 [Service]
