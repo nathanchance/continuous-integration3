@@ -28,44 +28,6 @@ VALID_STABLE_VERS = ('7.2',)
 VALID_TREES = ('linux', 'linux-next', *[f"linux-stable-{ver}" for ver in VALID_STABLE_VERS])
 
 
-def clone_mirror_repo(remote_repo_name: str, local_repo_name: str = '', branch: str = '') -> Path:
-    repo_name_to_path = {
-        'boot-utils': '/boot-utils.git',
-        'linux': '/pub/scm/linux/kernel/git/torvalds/linux.git',
-        'linux-next': '/pub/scm/linux/kernel/git/next/linux-next.git',
-        'linux-stable': '/pub/scm/linux/kernel/git/stable/linux.git',
-    }
-    if not (remote_repo_path := repo_name_to_path.get(remote_repo_name)):
-        print(f"[!] Do not know how to clone {remote_repo_name} from mirror!")
-        sys.exit(1)
-
-    remote_repo = f"{MIRROR_GIT}{remote_repo_path}"
-    local_repo = Path('/', local_repo_name or remote_repo_name)
-
-    print(f"[+] Cloning {remote_repo} to {local_repo}", end='', flush=True)
-    start = time.time()
-    git_clone_args = ['--depth=1', '--quiet']
-    if branch:
-        git_clone_args.append(f"--branch={branch}")
-    subprocess.run(['git', 'clone', *git_clone_args, remote_repo, local_repo], check=True)
-    print(f" [duration: {get_duration(start)}]", flush=True)
-
-    info_cmd = ['git', '-C', local_repo, 'show', '-s', '--format=%H ("%s", %cs)']
-    info_output = subprocess.run(
-        info_cmd, capture_output=True, check=True, text=True
-    ).stdout.strip()
-    branch_cmd = ['git', '-C', local_repo, 'rev-parse', '--abbrev-ref', 'HEAD']
-    branch_output = subprocess.run(
-        branch_cmd, capture_output=True, check=True, text=True
-    ).stdout.strip()
-    print(
-        f"[+] Successfully checked out {local_repo.name} -> {branch_output} @ {info_output}",
-        flush=True,
-    )
-
-    return local_repo
-
-
 def get_duration(start_seconds: float, end_seconds: float | None = None) -> str:
     if not end_seconds:
         end_seconds = time.time()
@@ -84,6 +46,59 @@ def get_duration(start_seconds: float, end_seconds: float | None = None) -> str:
     parts.append(f"{seconds}s")
 
     return ' '.join(parts)
+
+
+class MirrorRepo:
+    def __init__(self, tree: str, local_path: Path | None = None, revision: str = '') -> None:
+        tree_to_repo = {
+            'boot-utils': '/boot-utils.git',
+            'linux': '/pub/scm/linux/kernel/git/torvalds/linux.git',
+            'linux-next': '/pub/scm/linux/kernel/git/next/linux-next.git',
+            'linux-stable': '/pub/scm/linux/kernel/git/stable/linux.git',
+        }
+
+        # normalize 'linux-stable-x.y' into 'linux-stable' tree with 'linux-x.y' branch
+        if tree.startswith('linux-stable'):
+            self.tree, stable_ver = tree.rsplit('-', 1)
+            self.branch: str = f"linux-{stable_ver}.y"
+        else:
+            self.tree: str = tree
+            self.branch: str = ''
+        self.revision: str = revision
+
+        if self.tree not in tree_to_repo:
+            print(f"[!] Provided tree ('{tree}') does not exist on mirror!")
+            sys.exit(1)
+
+        self.remote_path: str = f"{MIRROR_GIT}{tree_to_repo[self.tree]}"
+        self.local_path: Path = local_path or Path('/', self.tree)
+
+    def _git(self, cmd: list[str]) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            ['git', '-C', self.local_path, *cmd], capture_output=True, check=True, text=True
+        )
+
+    def clone(self) -> Path:
+        print(f"[+] Cloning {self.remote_path} to {self.local_path}", end='', flush=True)
+        start = time.time()
+        git_clone_args = ['--depth=1', '--quiet']
+        if self.revision:
+            git_clone_args.append(f"--revision={self.revision}")
+        elif self.branch:
+            git_clone_args.append(f"--branch={self.branch}")
+        subprocess.run(
+            ['git', 'clone', *git_clone_args, self.remote_path, self.local_path], check=True
+        )
+        print(f" [duration: {get_duration(start)}]", flush=True)
+
+        head_info = self._git(['show', '-s', '--format=%H ("%s", %cs)']).stdout.strip()
+        branch = self._git(['rev-parse', '--abbrev-ref', 'HEAD']).stdout.strip()
+        print(
+            f"[+] Successfully checked out {self.local_path.name} -> {branch} @ {head_info}",
+            flush=True,
+        )
+
+        return self.local_path
 
 
 def parse_arguments():
@@ -110,6 +125,7 @@ def parse_arguments():
         type=int,
         help='LLVM version to build with',
     )
+    kernel_build_parser.add_argument('-r', '--revision', help='Revision to clone repository at')
     kernel_build_parser.add_argument(
         '-t', '--tree', choices=VALID_TREES, default=VALID_TREES[0], help='Tree to build'
     )
@@ -182,6 +198,7 @@ class KernelRunner:
         self.boot: bool = False
         self.kconfigs: list[str] = []
         self.llvm_version: int = 0
+        self.revision: str = ''
         self.tree: str = ''
         self.verbose: bool = False
 
@@ -234,17 +251,11 @@ class KernelRunner:
         print(f" [duration: {get_duration(start)}]", flush=True)
 
     def _prepare_git(self) -> None:
-        # convert 'linux-stable-x.y' into 'linux-stable' tree with 'linux-x.y' branch
-        branch = ''
-        if self.tree.startswith('linux-stable'):
-            self.tree, stable_ver = self.tree.rsplit('-', 1)
-            branch = f"linux-{stable_ver}.y"
-
-        self._tuxmake_kwargs['tree'] = clone_mirror_repo(
-            self.tree, local_repo_name='source', branch=branch
-        )
+        self._tuxmake_kwargs['tree'] = MirrorRepo(
+            self.tree, local_path=Path('/source'), revision=self.revision
+        ).clone()
         if self.boot:
-            self._boot_utils_path = clone_mirror_repo('boot-utils')
+            self._boot_utils_path = MirrorRepo('boot-utils').clone()
 
     def _build(self) -> None:
         # It would be nicer to use LLVM=<prefix>/bin/ here but tuxmake ensures
@@ -398,6 +409,7 @@ def main() -> None:
         runner.boot = args.boot
         runner.kconfigs = args.kconfigs
         runner.llvm_version = args.llvm_version
+        runner.revision = args.revision
         runner.tree = args.tree
         runner.verbose = args.verbose
 
