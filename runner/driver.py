@@ -137,7 +137,7 @@ class MirrorRepo:
         else:
             print(latest_revision)
 
-    def check_patch_application(self) -> None:
+    def apply_patches(self) -> None:
         if not (patches := list(self.patches_dir.glob('*.patch'))):
             return
 
@@ -157,7 +157,7 @@ class MirrorRepo:
             'GIT_COMMITTER_EMAIL': git_email,
         }  # fmt: skip
 
-        print(f"[+] Checking that patches in {self.patches_dir} apply to {self.local_path}")
+        print(f"[+] Applying patches in {self.patches_dir} to {self.local_path}")
         self._git(['am', '-3', *patches], env=git_commit_env_vars)
 
 
@@ -327,9 +327,9 @@ class KernelRunner:
         print(f" [duration: {get_duration(start)}]", flush=True)
 
     def _prepare_git(self) -> None:
-        self._tuxmake_kwargs['tree'] = MirrorRepo(
-            self.tree, local_path=Path('/source'), revision=self.revision
-        ).clone()
+        tree_repo = MirrorRepo(self.tree, local_path=Path('/source'), revision=self.revision)
+        self._tuxmake_kwargs['tree'] = tree_repo.clone()
+        tree_repo.apply_patches()
         if self.boot:
             self._boot_utils_path = MirrorRepo('boot-utils').clone()
 
@@ -495,7 +495,7 @@ def main() -> None:
         MirrorRepo(args.tree).gen_revision()
 
     if args.action == 'check-patch-application':
-        MirrorRepo(args.tree, revision=args.revision).check_patch_application()
+        MirrorRepo(args.tree, revision=args.revision).apply_patches()
 
 
 if __name__ == '__main__':
