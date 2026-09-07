@@ -51,10 +51,6 @@ def get_duration(start_seconds: float, end_seconds: float | None = None) -> str:
 class MirrorRepo:
     def __init__(self, tree: str, local_path: Path | None = None, revision: str = '') -> None:
         tree_to_repo = {
-            'boot-utils': {
-                'url': '/boot-utils.git',
-                'branch': 'main',
-            },
             'linux': {
                 'url': '/pub/scm/linux/kernel/git/torvalds/linux.git',
             },
@@ -64,6 +60,9 @@ class MirrorRepo:
             'linux-stable': {
                 'url': '/pub/scm/linux/kernel/git/stable/linux.git',
             },
+        } | {
+            item: {'url': f"/{item}.git", 'branch': 'main'}
+            for item in ('boot-utils', 'llvm-project', 'tc-build')
         }
 
         ci_root = work if (work := Path('/work')).exists() else Path(__file__).resolve().parents[1]
