@@ -61,7 +61,7 @@ def setup_srv_git() -> None:
     repo_urls = [
         'https://github.com/ClangBuiltLinux/boot-utils.git',
         'https://github.com/ClangBuiltLinux/tc-build.git',
-        'https://github.com/llvm-project/llvm-project.git',
+        'https://github.com/llvm/llvm-project.git',
     ]
     for repo_url in repo_urls:
         if (repo := Path(GIT_DIR, Path(repo_url).name)).exists():
