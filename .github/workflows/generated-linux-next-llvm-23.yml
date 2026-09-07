@@ -19,7 +19,7 @@ jobs:
       id: genrev
       run: runner/driver.py generate-revision linux-next
     - name: Check that patches apply to linux-next
-      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py check-patch-application -r ${ steps.genrev.outputs.revision } linux-next
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py check-patch-application -r ${{ steps.genrev.outputs.revision }} linux-next
   _9e2b9ec95548eb437ec0b7962e8069e6667ba50768329bf42a6ae76eb9ab493b:
     name: arm multi_v5_defconfig
     runs-on:
