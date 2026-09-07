@@ -192,6 +192,8 @@ def parse_arguments():
         '-v', '--verbose', action='store_true', help='Perform verbose build in tuxmake'
     )
 
+    subparsers.add_parser('llvm-build', help='Perform a LLVM build via build-llvm.py')
+
     gen_rev_parser = subparsers.add_parser(
         'generate-revision',
         help='Generate git sha to be used as consistent revision throughout build',
@@ -456,6 +458,58 @@ class RISCVKernelRunner(KernelRunner):
         super()._build()
 
 
+class LLVMRunner:
+    def __init__(self) -> None:
+        self.build = Path('/build')
+        self.source = Path('/source')
+        self.tc_build = Path('/tc-build')
+
+        check_targets = [
+            'clang',
+            'lld',
+            'llvm',
+            'llvm-unit',
+        ]
+        install_targets = [
+            'clang-resource-headers',
+            'compiler-rt',
+            'libclang',
+            'libclang-headers',
+            'llvm-as',
+            'llvm-driver',
+            'llvm-dwarfdump',
+            'llvm-link',
+            'llvm-strings',
+        ]
+        projects = [
+            'clang',
+            'compiler-rt',
+            'lld',
+        ]
+        self.base_build_llvm_cmd = [
+            Path(self.tc_build, 'build-llvm.py'),
+            '--build-folder', self.build,
+            '--check-targets', *check_targets,
+            '--install-targets', *install_targets,
+            '--llvm-folder', self.source,
+            '--multicall',
+            '--no-ccache',
+            '--projects', *projects,
+            '--quiet-cmake',
+            '--show-build-commands',
+        ]  # fmt: skip
+
+    def _stage_one(self) -> None:
+        MirrorRepo('llvm-project', local_path=self.source).clone()
+        MirrorRepo('tc-build').clone()
+
+        print('[+] Building stage one toolchain for initial qualification')
+        subprocess.run([*self.base_build_llvm_cmd, '--build-stage1-only'], check=True)
+
+    def run(self) -> None:
+        self._stage_one()
+
+
 def assert_container_env() -> None:
     try:
         subprocess.run(['systemd-detect-virt', '-c'], capture_output=True, check=True, text=True)
@@ -489,6 +543,11 @@ def main() -> None:
         runner.verbose = args.verbose
 
         runner.run()
+
+    if args.action == 'llvm-build':
+        assert_container_env()
+
+        LLVMRunner().run()
 
     if args.action == 'generate-revision':
         MirrorRepo(args.tree).gen_revision()
