@@ -81,14 +81,18 @@ class MirrorRepo:
     def clone(self) -> Path:
         print(f"[+] Cloning {self.remote_path} to {self.local_path}", end='', flush=True)
         start = time.time()
-        git_clone_args = ['--depth=1', '--quiet']
+        git_clone_cmd = [
+            'git',
+            '-c', 'advice.detachedHead=false',
+            'clone',
+            '--depth=1',
+            '--quiet',
+        ]  # fmt: skip
         if self.revision:
-            git_clone_args.append(f"--revision={self.revision}")
+            git_clone_cmd.append(f"--revision={self.revision}")
         elif self.branch:
-            git_clone_args.append(f"--branch={self.branch}")
-        subprocess.run(
-            ['git', 'clone', *git_clone_args, self.remote_path, self.local_path], check=True
-        )
+            git_clone_cmd.append(f"--branch={self.branch}")
+        subprocess.run([*git_clone_cmd, self.remote_path, self.local_path], check=True)
         print(f" [duration: {get_duration(start)}]", flush=True)
 
         head_info = self._git(['show', '-s', '--format=%H ("%s", %cs)']).stdout.strip()
