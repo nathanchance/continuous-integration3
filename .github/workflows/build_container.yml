@@ -28,6 +28,10 @@ jobs:
       contents: read
       packages: write
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        type: [kernel, llvm]
     steps:
       - name: Clone repository
         uses: actions/checkout@v7
@@ -35,11 +39,11 @@ jobs:
       - name: Setup mkosi
         uses: systemd/mkosi@main
 
-      - name: Build kernel container image
-        run: runner/build_container_image.sh kernel
+      - name: Build ${{ matrix.type }} container image
+        run: runner/build_container_image.sh ${{ matrix.type }}
 
-      - name: Push kernel container image
+      - name: Push ${{ matrix.type }} container image
         if: ${{ github.repository_owner == 'nathanchance' && ((github.event_name == 'workflow_dispatch' && github.event.inputs.push_image == 'true') || github.event_name == 'schedule') }}
-        run: runner/push_container_image.sh kernel
+        run: runner/push_container_image.sh ${{ matrix.type }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
