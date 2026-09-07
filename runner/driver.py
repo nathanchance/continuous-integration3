@@ -461,7 +461,8 @@ class RISCVKernelRunner(KernelRunner):
 class LLVMRunner:
     def __init__(self) -> None:
         self.build = Path('/build')
-        self.source = Path('/source')
+        self.llvm = Path('/llvm')
+        self.linux = Path('/linux')
         self.tc_build = Path('/tc-build')
 
         check_targets = [
@@ -491,7 +492,8 @@ class LLVMRunner:
             '--build-folder', self.build,
             '--check-targets', *check_targets,
             '--install-targets', *install_targets,
-            '--llvm-folder', self.source,
+            '--linux-folder', self.linux,
+            '--llvm-folder', self.llvm,
             '--multicall',
             '--no-ccache',
             '--projects', *projects,
@@ -500,7 +502,11 @@ class LLVMRunner:
         ]  # fmt: skip
 
     def _stage_one(self) -> None:
-        MirrorRepo('llvm-project', local_path=self.source).clone()
+        llvm_repo = MirrorRepo('llvm-project', local_path=self.llvm)
+        llvm_repo.clone()
+        # set origin to upstream url, as it is visible in the version string
+        llvm_repo.git(['remote', 'set-url', 'origin', 'https://github.com/llvm/llvm-project.git'])
+        MirrorRepo(f"linux-stable-{VALID_STABLE_VERS[0]}", local_path=self.linux).clone()
         MirrorRepo('tc-build').clone()
 
         print('[+] Building stage one toolchain for initial qualification')
