@@ -165,7 +165,7 @@ def parse_arguments():
     )
 
     gen_rev_parser = subparsers.add_parser(
-        'gen-revision', help='Generate git sha to be used as consistent revision throughout build'
+        'generate-revision', help='Generate git sha to be used as consistent revision throughout build'
     )
     gen_rev_parser.add_argument('tree', choices=VALID_TREES, help='Tree to generate revision for')
 
@@ -451,7 +451,7 @@ def main() -> None:
 
         runner.run()
 
-    if args.action == 'gen-revision':
+    if args.action == 'generate-revision':
         MirrorRepo(args.tree).gen_revision()
 
 
