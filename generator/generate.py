@@ -55,6 +55,10 @@ class Workflow:
                         'id': 'genrev',
                         'run': f"runner/driver.py generate-revision {self.tree}",
                     },
+                    {
+                        'name': f"Check that patches apply to {self.tree}",
+                        'run': f"{' '.join(self.PODMAN_RUN_DRIVER)} check-patch-application -r ${{ steps.genrev.outputs.revision }} {self.tree}",
+                    },
                 ],
             },
         }
