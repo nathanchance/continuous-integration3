@@ -304,7 +304,7 @@ def create_vm(
     print(f"[+] Running virt-install for {vm_name}...")
     if (vm_type := vm_name.rsplit('-', 2)[1]) == 'big':
         num_cpus = 12
-    elif vm_type in ('mirror', 'normal'):
+    elif vm_type in {'mirror', 'normal'}:
         num_cpus = 8
     elif vm_type == 'small':
         num_cpus = 4
