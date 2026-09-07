@@ -20,13 +20,10 @@ class Workflow:
     PODMAN_RUN_DRIVER = (
         'podman', 'run',
         '--env', 'GITHUB_ACTIONS',
-        '--env', 'GITHUB_OUTPUT',
         '--env', 'GITHUB_WORKSPACE',
         '--pull', 'newer',
-        '--quiet',
         '--rm',
         '--tty',
-        '--volume', '$GITHUB_OUTPUT:$GITHUB_OUTPUT',
         '--volume', '$GITHUB_WORKSPACE:/work:ro',
         'ghcr.io/nathanchance/ci3-kernel-build-env:latest',
         '/work/runner/driver.py',
@@ -56,7 +53,7 @@ class Workflow:
                     {
                         'name': f"Generate pinned revision for {self.tree}",
                         'id': 'genrev',
-                        'run': f"{' '.join(self.PODMAN_RUN_DRIVER)} gen-revision {self.tree}",
+                        'run': f"runner/driver.py generate-revision {self.tree}",
                     },
                 ],
             },
