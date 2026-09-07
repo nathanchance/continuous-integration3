@@ -66,7 +66,12 @@ class MirrorRepo:
             },
         }
 
-        # normalize 'linux-stable-x.y' into 'linux-stable' tree with 'linux-x.y' branch
+        ci_root = work if (work := Path('/work')).exists() else Path(__file__).resolve().parents[1]
+
+        # Set this before normalization below
+        self.patches_dir = Path(ci_root, 'patches', tree)
+
+        # Normalize 'linux-stable-x.y' into 'linux-stable' tree with 'linux-x.y' branch
         if tree.startswith('linux-stable'):
             tree, stable_ver = tree.rsplit('-', 1)
             tree_to_repo[tree]['branch'] = f"linux-{stable_ver}.y"
@@ -82,10 +87,11 @@ class MirrorRepo:
         self.remote_path: str = f"{MIRROR_GIT}{tree_data['url']}"
         self.local_path: Path = local_path or Path('/', self.tree)
 
-    def _git(self, cmd: list[str]) -> subprocess.CompletedProcess:
-        return subprocess.run(
-            ['git', '-C', self.local_path, *cmd], capture_output=True, check=True, text=True
-        )
+    def _git_quiet(self, cmd: list[Path | str], **kwargs) -> subprocess.CompletedProcess:
+        return self._git(cmd, capture_output=True, **kwargs)
+
+    def _git(self, cmd: list[Path | str], **kwargs) -> subprocess.CompletedProcess:
+        return subprocess.run(['git', '-C', self.local_path, *cmd], check=True, text=True, **kwargs)
 
     def clone(self) -> Path:
         print(f"[+] Cloning {self.remote_path} to {self.local_path}", end='', flush=True)
@@ -104,8 +110,8 @@ class MirrorRepo:
         subprocess.run([*git_clone_cmd, self.remote_path, self.local_path], check=True)
         print(f" [duration: {get_duration(start)}]", flush=True)
 
-        head_info = self._git(['show', '-s', '--format=%H ("%s", %cs)']).stdout.strip()
-        branch = self._git(['rev-parse', '--abbrev-ref', 'HEAD']).stdout.strip()
+        head_info = self._git_quiet(['show', '-s', '--format=%H ("%s", %cs)']).stdout.strip()
+        branch = self._git_quiet(['rev-parse', '--abbrev-ref', 'HEAD']).stdout.strip()
         print(
             f"[+] Successfully checked out {self.local_path.name} -> {branch} @ {head_info}",
             flush=True,
@@ -130,6 +136,29 @@ class MirrorRepo:
                 f.write(f"revision={latest_revision}\n")
         else:
             print(latest_revision)
+
+    def check_patch_application(self) -> None:
+        if not (patches := list(self.patches_dir.glob('*.patch'))):
+            return
+
+        if not self.local_path.exists():
+            self.clone()
+
+        # Ensure that we can always commit regardless of whether user.name or
+        # user.email are set in whatever environment we are running in, as this is
+        # a temporary tree.
+        git_name = 'check-patch-application'
+        git_email = f"{git_name}@{os.uname().nodename}.local"
+        git_commit_env_vars = {
+            **os.environ,   # clone the environment, as subprocess may need it
+            'GIT_AUTHOR_NAME': git_name,
+            'GIT_AUTHOR_EMAIL': git_email,
+            'GIT_COMMITTER_NAME': git_name,
+            'GIT_COMMITTER_EMAIL': git_email,
+        }  # fmt: skip
+
+        print(f"[+] Checking that patches in {self.patches_dir} apply to {self.local_path}")
+        self._git(['am', '-3', *patches], env=git_commit_env_vars)
 
 
 def parse_arguments():
@@ -165,9 +194,20 @@ def parse_arguments():
     )
 
     gen_rev_parser = subparsers.add_parser(
-        'generate-revision', help='Generate git sha to be used as consistent revision throughout build'
+        'generate-revision',
+        help='Generate git sha to be used as consistent revision throughout build',
     )
     gen_rev_parser.add_argument('tree', choices=VALID_TREES, help='Tree to generate revision for')
+
+    check_patch_apply_parser = subparsers.add_parser(
+        'check-patch-application', help='Check that vendored patches apply to repository'
+    )
+    check_patch_apply_parser.add_argument(
+        '-r', '--revision', help='Revision to clone repository at'
+    )
+    check_patch_apply_parser.add_argument(
+        'tree', choices=VALID_TREES, help='Tree to apply patches to'
+    )
 
     return parser.parse_args()
 
@@ -453,6 +493,9 @@ def main() -> None:
 
     if args.action == 'generate-revision':
         MirrorRepo(args.tree).gen_revision()
+
+    if args.action == 'check-patch-application':
+        MirrorRepo(args.tree, revision=args.revision).check_patch_application()
 
 
 if __name__ == '__main__':
