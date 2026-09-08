@@ -12,6 +12,7 @@ import json
 import os
 import platform
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -282,6 +283,7 @@ class KernelRunner:
     def __init__(self) -> None:
         self.arch: str = ''
         self.boot: bool = False
+        self.build_dir: Path = Path('/build/linux')
         self.kconfigs: list[str] = []
         self.llvm_version: int = 0
         self.local_source: Path = Path()
@@ -293,7 +295,7 @@ class KernelRunner:
         self._boot_utils_arch: str = ''
         self._boot_utils_path: Path = Path()
         self._tuxmake_kwargs: dict[str, Any] = {
-            'build_dir': Path('/build/linux'),
+            'build_dir': self.build_dir,
             'kconfig': '',
             'kconfig_add': [],
             'kernel_image': None,
@@ -554,33 +556,58 @@ class LLVMRunner:
         install_name_parts = ['llvm', llvm_ver_str, right, head_sha, date_time, platform.machine()]
         self.install_folder = Path('/install', '-'.join(install_name_parts))
 
-    def _qualify_stage_one(self) -> None:
-        build_matrix = (
-            ('arm', 'allmodconfig'),
-            ('arm64', 'allmodconfig'),
-            ('x86_64', 'allmodconfig'),
-        )
-        for arch, kconfig in build_matrix:
-            runner: KernelRunner = arch_to_kernel_runner(arch)
-            runner.kconfigs = [kconfig, 'CONFIG_WERROR=n']
-            runner.local_source = self.linux
-            runner.toolchain_prefix = Path(self.build, 'final')
-            runner.run()
-
     def _stage_one(self) -> None:
         MirrorRepo(f"linux-stable-{VALID_STABLE_VERS[0]}", local_path=self.linux).clone()
         MirrorRepo('tc-build').clone()
 
-        print('[+] Building stage one toolchain for initial qualification')
+        print('[+] Building toolchain for initial stability qualification')
         stage_one_tc_cmd = [*self.base_build_llvm_cmd, '--assertions', '--build-stage1-only']
         print(f"$ {' '.join(map(str, stage_one_tc_cmd))}")
         subprocess.run(stage_one_tc_cmd, check=True)
 
-        self._qualify_stage_one()
+        print('[+] Testing stage one toolchain against Linux')
+        for arch in ('arm', 'arm64', 'riscv', 'x86_64'):
+            runner: KernelRunner = arch_to_kernel_runner(arch)
+            runner.kconfigs = ['allmodconfig', 'CONFIG_WERROR=n']
+            runner.local_source = self.linux
+            runner.toolchain_prefix = Path(self.build, 'final')
+
+            if runner.build_dir.exists():
+                shutil.rmtree(runner.build_dir)
+            runner.run()
+
+    def _stage_two(self) -> None:
+        print(
+            f"[+] Building final toolchain using BOLT and PGO and installing into {self.install_folder}"
+        )
+        stage_two_tc_cmd = [
+            *self.base_build_llvm_cmd,
+            '--bolt',
+            '--install-folder', self.install_folder,
+            '--pgo', 'kernel-defconfig-slim',
+        ]  # fmt: skip
+        print(f"$ {' '.join(map(str, stage_two_tc_cmd))}")
+        subprocess.run(stage_two_tc_cmd, check=True)
+
+        tarball = Path(self.install_folder.parent, f"{self.install_folder.name}.tar")
+        compressed_tarball = tarball.with_suffix('.tar.zst')
+        print(f"[+] Compressing toolchain into tarball -> {compressed_tarball}")
+        tar_cmd = [
+            'tar',
+            '--create',
+            '--directory', self.install_folder.parent,
+            '--file', tarball,
+            self.install_folder.name,
+        ]  # fmt: skip
+        subprocess.run(tar_cmd, check=True)
+
+        zstd_cmd = ['zstd', '-19', '-o', compressed_tarball, '--rm', '-T0', tarball]
+        subprocess.run(zstd_cmd, check=True)
 
     def run(self) -> None:
         self._runner_setup()
         self._stage_one()
+        self._stage_two()
 
 
 def arch_to_kernel_runner(arch: str) -> KernelRunner:
