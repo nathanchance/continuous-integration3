@@ -533,7 +533,7 @@ class LLVMRunner:
 
     def _runner_setup(self) -> None:
         llvm_repo = MirrorRepo('llvm-project', local_path=self.llvm)
-        llvm_repo.clone(shallow=False, extra_clone_args=['--filter=blob:none'])
+        llvm_repo.clone(shallow=False, extra_clone_args=['--single-branch'])
         # set origin to upstream url, as it is visible in the version string
         llvm_repo.git(['remote', 'set-url', 'origin', 'https://github.com/llvm/llvm-project.git'])
 
