@@ -1,0 +1,12 @@
+name: build and release LLVM
+on: workflow_dispatch
+permissions: read-all
+jobs:
+  build_llvm:
+    name: build and release LLVM
+    runs-on: [self-hosted, big]
+    steps:
+    - name: Clone continuous-integration3
+      uses: actions/checkout@v7
+    - name: Build and release LLVM
+      run: podman run --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-llvm-build-env:latest /work/runner/driver.py llvm-build
