@@ -349,12 +349,12 @@ class KernelRunner:
     def _prepare_git(self) -> None:
         # If a Linux kernel source has already been provided, use it
         if self.local_source == Path():
-            print(f"[+] Using provided source: {self.local_source}")
-            self._tuxmake_kwargs['tree'] = self.local_source
-        else:
             tree_repo = MirrorRepo(self.tree, local_path=Path('/source'), revision=self.revision)
             self._tuxmake_kwargs['tree'] = tree_repo.clone()
             tree_repo.apply_patches()
+        else:
+            print(f"[+] Using provided source: {self.local_source}")
+            self._tuxmake_kwargs['tree'] = self.local_source
 
         if self.boot:
             self._boot_utils_path = MirrorRepo('boot-utils').clone()
