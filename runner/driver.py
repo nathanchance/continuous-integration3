@@ -7,8 +7,10 @@
 # ]
 # ///
 
+import datetime
 import json
 import os
+import platform
 import re
 import subprocess
 import sys
@@ -275,14 +277,16 @@ class KernelRunner:
         self.boot: bool = False
         self.kconfigs: list[str] = []
         self.llvm_version: int = 0
+        self.local_source: Path = Path()
         self.revision: str = ''
+        self.toolchain_prefix: Path = Path()
         self.tree: str = ''
         self.verbose: bool = False
 
         self._boot_utils_arch: str = ''
         self._boot_utils_path: Path = Path()
         self._tuxmake_kwargs: dict[str, Any] = {
-            'build_dir': Path('/build'),
+            'build_dir': Path('/build/linux'),
             'kconfig': '',
             'kconfig_add': [],
             'kernel_image': None,
@@ -299,9 +303,17 @@ class KernelRunner:
             'tree': Path(),
             'verbose': False,
         }
-        self._toolchain_prefix: Path = Path()
 
     def _prepare_toolchain(self) -> None:
+        # If toolchain has already been provided, don't try to install one from mirror
+        if self.toolchain_prefix != Path():
+            if not Path(self.toolchain_prefix, 'bin/clang').exists():
+                print(f"[!] Provided toolchain ('{self.toolchain_prefix}') does not have clang!")
+                sys.exit(1)
+
+            print(f"[+] Using provided toolchain: {self.toolchain_prefix}")
+            return
+
         # Fetch latest available toolchains from mirror VM
         result = requests.get(f"{MIRROR_HTTP}/toolchains/latest_llvm_releases.json", timeout=15)
         result.raise_for_status()
@@ -310,7 +322,7 @@ class KernelRunner:
             raise RuntimeError(msg)
 
         # Download and extract toolchain into build container
-        self._toolchain_prefix = Path('/', toolchain_tarball.replace('.tar.xz', ''))
+        self.toolchain_prefix = Path('/', toolchain_tarball.replace('.tar.xz', ''))
         tar_url = f"{MIRROR_HTTP}/toolchains/{toolchain_tarball}"
         print(f"[+] Downloading {tar_url}", end='', flush=True)
         start = time.time()
@@ -318,26 +330,32 @@ class KernelRunner:
         result.raise_for_status()
         print(f" [duration: {get_duration(start)}]", flush=True)
 
-        print(f"[+] Extracting {toolchain_tarball} to {self._toolchain_prefix}", end='', flush=True)
+        print(f"[+] Extracting {toolchain_tarball} to {self.toolchain_prefix}", end='', flush=True)
         start = time.time()
         subprocess.run(
-            ['tar', '-C', self._toolchain_prefix.parent, '-f', '-', '-J', '-x'],
+            ['tar', '-C', self.toolchain_prefix.parent, '-f', '-', '-J', '-x'],
             check=True,
             input=result.content,
         )
         print(f" [duration: {get_duration(start)}]", flush=True)
 
     def _prepare_git(self) -> None:
-        tree_repo = MirrorRepo(self.tree, local_path=Path('/source'), revision=self.revision)
-        self._tuxmake_kwargs['tree'] = tree_repo.clone()
-        tree_repo.apply_patches()
+        # If a Linux kernel source has already been provided, use it
+        if self.local_source == Path():
+            print(f"[+] Using provided source: {self.local_source}")
+            self._tuxmake_kwargs['tree'] = self.local_source
+        else:
+            tree_repo = MirrorRepo(self.tree, local_path=Path('/source'), revision=self.revision)
+            self._tuxmake_kwargs['tree'] = tree_repo.clone()
+            tree_repo.apply_patches()
+
         if self.boot:
             self._boot_utils_path = MirrorRepo('boot-utils').clone()
 
     def _build(self) -> None:
         # It would be nicer to use LLVM=<prefix>/bin/ here but tuxmake ensures
         # the compiler is in PATH
-        os.environ['PATH'] = f"{self._toolchain_prefix}/bin:{os.environ['PATH']}"
+        os.environ['PATH'] = f"{self.toolchain_prefix}/bin:{os.environ['PATH']}"
 
         print('[+] Calling tuxmake to build kernel', flush=True)
         self._tuxmake_kwargs['kconfig'] = self.kconfigs[0]
@@ -460,10 +478,12 @@ class RISCVKernelRunner(KernelRunner):
 
 class LLVMRunner:
     def __init__(self) -> None:
-        self.build = Path('/build')
+        self.build = Path('/build/llvm')
         self.llvm = Path('/llvm')
         self.linux = Path('/linux')
         self.tc_build = Path('/tc-build')
+
+        self.install_folder: Path = Path()
 
         check_targets = [
             'clang',
@@ -501,21 +521,74 @@ class LLVMRunner:
             '--show-build-commands',
         ]  # fmt: skip
 
-    def _stage_one(self) -> None:
+    def _runner_setup(self) -> None:
         llvm_repo = MirrorRepo('llvm-project', local_path=self.llvm)
         llvm_repo.clone()
         # set origin to upstream url, as it is visible in the version string
         llvm_repo.git(['remote', 'set-url', 'origin', 'https://github.com/llvm/llvm-project.git'])
+
+        cmake_txt = Path(self.llvm, 'cmake/Modules/LLVMVersion.cmake').read_text(encoding='utf-8')
+        llvm_ver_tuple = tuple(re.findall(r"\s+set\(LLVM_VERSION_[A-Z]+ ([0-9]+)\)", cmake_txt))
+        llvm_ver_str = '.'.join(llvm_ver_tuple)
+        if len(llvm_ver_tuple) != 3:
+            msg = f"Malformed LLVM version found? {llvm_ver_str}"
+            raise RuntimeError(msg)
+
+        base_tag = f"llvmorg-{llvm_ver_tuple[0]}-init"
+        left, right = llvm_repo.git_quiet(
+            ['rev-list', '--count', '--left-right', f"{base_tag}...HEAD"]
+        ).stdout.split()
+        if left != '0':
+            msg = f"HEAD is not a decendent of {base_tag}?"
+            raise RuntimeError(msg)
+        head_sha = llvm_repo.git_quiet(['show', '-s', '--format=%H']).stdout.strip()
+        date_time = datetime.datetime.now().astimezone().strftime('%Y%m%d-%H%M%S')
+
+        install_name_parts = ['llvm', llvm_ver_str, right, head_sha, date_time, platform.machine()]
+        self.install_folder = Path('/install', '-'.join(install_name_parts))
+
+    def _qualify_stage_one(self) -> None:
+        build_matrix = (
+            ('arm', 'allmodconfig'),
+            ('arm64', 'allmodconfig'),
+            ('x86_64', 'allmodconfig'),
+        )
+        for arch, kconfig in build_matrix:
+            runner: KernelRunner = arch_to_kernel_runner(arch)
+            runner.kconfigs = [kconfig, 'CONFIG_WERROR=n']
+            runner.local_source = self.linux
+            runner.toolchain_prefix = Path(self.build, 'final')
+            runner.run()
+
+    def _stage_one(self) -> None:
         MirrorRepo(f"linux-stable-{VALID_STABLE_VERS[0]}", local_path=self.linux).clone()
         MirrorRepo('tc-build').clone()
 
         print('[+] Building stage one toolchain for initial qualification')
-        stage_one_tc_cmd = [*self.base_build_llvm_cmd, '--build-stage1-only']
+        stage_one_tc_cmd = [*self.base_build_llvm_cmd, '--assertions', '--build-stage1-only']
         print(f"$ {' '.join(map(str, stage_one_tc_cmd))}")
         subprocess.run(stage_one_tc_cmd, check=True)
 
+        self._qualify_stage_one()
+
     def run(self) -> None:
+        self._runner_setup()
         self._stage_one()
+
+
+def arch_to_kernel_runner(arch: str) -> KernelRunner:
+    arch_runners = {
+        'arm': ARMKernelRunner,
+        'i386': I386KernelRunner,
+        'mips': MipsKernelRunner,
+        'powerpc': PowerPCKernelRunner,
+        'riscv': RISCVKernelRunner,
+    }
+
+    runner = arch_runners.get(arch, KernelRunner)()
+    runner.arch = arch
+
+    return runner
 
 
 def assert_container_env() -> None:
@@ -534,15 +607,7 @@ def main() -> None:
 
         register_problem_matchers()
 
-        arch_runners = {
-            'arm': ARMKernelRunner,
-            'i386': I386KernelRunner,
-            'mips': MipsKernelRunner,
-            'powerpc': PowerPCKernelRunner,
-            'riscv': RISCVKernelRunner,
-        }
-        runner: KernelRunner = arch_runners.get(args.arch, KernelRunner)()
-        runner.arch = args.arch
+        runner: KernelRunner = arch_to_kernel_runner(args.arch)
         runner.boot = args.boot
         runner.kconfigs = args.kconfigs
         runner.llvm_version = args.llvm_version
