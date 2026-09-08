@@ -101,16 +101,19 @@ class MirrorRepo:
     def git(self, cmd: list[Path | str], **kwargs) -> subprocess.CompletedProcess:
         return subprocess.run(['git', '-C', self.local_path, *cmd], check=True, text=True, **kwargs)
 
-    def clone(self) -> Path:
+    def clone(self, shallow: bool = True, extra_clone_args: list[str] | None = None) -> Path:
         print(f"[+] Cloning {self.remote_path} to {self.local_path}", end='', flush=True)
         start = time.time()
         git_clone_cmd = [
             'git',
             '-c', 'advice.detachedHead=false',
             'clone',
-            '--depth=1',
             '--quiet',
         ]  # fmt: skip
+        if extra_clone_args:
+            git_clone_cmd.extend(extra_clone_args)
+        if shallow:
+            git_clone_cmd.append('--depth=1')
         if self.revision:
             git_clone_cmd.append(f"--revision={self.revision}")
         elif self.branch:
@@ -530,7 +533,7 @@ class LLVMRunner:
 
     def _runner_setup(self) -> None:
         llvm_repo = MirrorRepo('llvm-project', local_path=self.llvm)
-        llvm_repo.clone()
+        llvm_repo.clone(shallow=False, extra_clone_args=['--filter=blob:none'])
         # set origin to upstream url, as it is visible in the version string
         llvm_repo.git(['remote', 'set-url', 'origin', 'https://github.com/llvm/llvm-project.git'])
 
