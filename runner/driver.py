@@ -89,7 +89,14 @@ class MirrorRepo:
         self.local_path: Path = local_path or Path('/', self.tree)
 
     def git_quiet(self, cmd: list[Path | str], **kwargs) -> subprocess.CompletedProcess:
-        return self.git(cmd, capture_output=True, **kwargs)
+        try:
+            return self.git(cmd, capture_output=True, **kwargs)
+        except subprocess.CalledProcessError as err:
+            if err.stderr:
+                print(err.stderr)
+            if err.stdout:
+                print(err.stdout)
+            raise
 
     def git(self, cmd: list[Path | str], **kwargs) -> subprocess.CompletedProcess:
         return subprocess.run(['git', '-C', self.local_path, *cmd], check=True, text=True, **kwargs)
