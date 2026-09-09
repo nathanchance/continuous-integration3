@@ -530,6 +530,9 @@ class LLVMRunner:
             '--show-build-commands',
         ]  # fmt: skip
 
+        if 'GITHUB_ACTIONS' in os.environ:
+            os.environ['LIT_OPTS'] = '-sv --no-progress-bar'
+
     def _runner_setup(self) -> None:
         llvm_repo = MirrorRepo('llvm-project', local_path=self.llvm)
         llvm_repo.clone(shallow=False, extra_clone_args=['--single-branch', '--tags'])
