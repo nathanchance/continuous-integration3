@@ -1,12 +1,23 @@
 name: build and release LLVM
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Push toolchain as a release'
+        required: false
+        type: boolean
 permissions: read-all
 jobs:
   build_llvm:
     name: build and release LLVM
     runs-on: [self-hosted, big]
+    permissions:
+      contents: write
     steps:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build and release LLVM
-      run: podman run --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-llvm-build-env:latest /work/runner/driver.py llvm-build
+      run: podman run --env GH_TOKEN --env GITHUB_ACTIONS --env RELEASE --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-llvm-build-env:latest /work/runner/driver.py llvm-build
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        RELEASE: ${{ github.event.inputs.release }}
