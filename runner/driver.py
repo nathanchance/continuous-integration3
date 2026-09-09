@@ -530,6 +530,7 @@ class LLVMRunner:
             '--show-build-commands',
         ]  # fmt: skip
 
+        os.environ['DISTRIBUTING'] = '1'
         if 'GITHUB_ACTIONS' in os.environ:
             os.environ['LIT_OPTS'] = '-sv --no-progress-bar'
 
