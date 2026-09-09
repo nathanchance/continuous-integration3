@@ -572,9 +572,14 @@ class LLVMRunner:
             runner.local_source = self.linux
             runner.toolchain_prefix = Path(self.build, 'final')
 
+            # clean previous build directory if it exists so that tuxmake does
+            # not try to build incrementally
             if runner.build_dir.exists():
                 shutil.rmtree(runner.build_dir)
             runner.run()
+            # clean up build directory right away to conserve builder disk
+            # space, we don't need these artifacts
+            shutil.rmtree(runner.build_dir)
 
     def _stage_two(self) -> None:
         print(
