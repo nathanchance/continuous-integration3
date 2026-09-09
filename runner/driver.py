@@ -533,6 +533,7 @@ class LLVMRunner:
     def _runner_setup(self) -> None:
         llvm_repo = MirrorRepo('llvm-project', local_path=self.llvm)
         llvm_repo.clone(shallow=False, extra_clone_args=['--single-branch', '--tags'])
+        subprocess.run(['du', '-hs', self.llvm], check=True)
         # set origin to upstream url, as it is visible in the version string
         llvm_repo.git(['remote', 'set-url', 'origin', 'https://github.com/llvm/llvm-project.git'])
 
@@ -558,12 +559,14 @@ class LLVMRunner:
 
     def _stage_one(self) -> None:
         MirrorRepo(f"linux-stable-{VALID_STABLE_VERS[0]}", local_path=self.linux).clone()
+        subprocess.run(['du', '-hs', self.linux], check=True)
         MirrorRepo('tc-build').clone()
 
         print('[+] Building toolchain for initial stability qualification')
         stage_one_tc_cmd = [*self.base_build_llvm_cmd, '--assertions', '--build-stage1-only']
         print(f"$ {' '.join(map(str, stage_one_tc_cmd))}")
         subprocess.run(stage_one_tc_cmd, check=True)
+        subprocess.run(['du', '-hs', self.build], check=True)
 
         print('[+] Testing stage one toolchain against Linux')
         for arch in ('arm', 'arm64', 'riscv', 'x86_64'):
@@ -575,6 +578,7 @@ class LLVMRunner:
             if runner.build_dir.exists():
                 shutil.rmtree(runner.build_dir)
             runner.run()
+            subprocess.run(['du', '-hs', runner.build_dir], check=True)
 
     def _stage_two(self) -> None:
         print(
@@ -588,6 +592,7 @@ class LLVMRunner:
         ]  # fmt: skip
         print(f"$ {' '.join(map(str, stage_two_tc_cmd))}")
         subprocess.run(stage_two_tc_cmd, check=True)
+        subprocess.run(['du', '-hs', self.build], check=True)
 
         tarball = Path(self.install_folder.parent, f"{self.install_folder.name}.tar")
         compressed_tarball = tarball.with_suffix('.tar.zst')
@@ -603,6 +608,9 @@ class LLVMRunner:
 
         zstd_cmd = ['zstd', '-19', '-o', compressed_tarball, '--rm', '-T0', tarball]
         subprocess.run(zstd_cmd, check=True)
+        subprocess.run(['du', '-hs', compressed_tarball], check=True)
+
+        subprocess.run(['tar', '-tf', compressed_tarball], check=True)
 
     def run(self) -> None:
         self._runner_setup()
