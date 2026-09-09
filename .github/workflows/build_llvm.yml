@@ -13,11 +13,13 @@ jobs:
     runs-on: [self-hosted, big]
     permissions:
       contents: write
+    timeout-minutes: 480
     steps:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build and release LLVM
       run: podman run --env GH_TOKEN --env GITHUB_ACTIONS --env RELEASE --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-llvm-build-env:latest /work/runner/driver.py llvm-build
+      timeout-minutes: 480
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         RELEASE: ${{ github.event.inputs.release }}
