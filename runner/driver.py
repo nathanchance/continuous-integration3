@@ -609,6 +609,19 @@ class LLVMRunner:
         zstd_cmd = ['zstd', '-19', '-o', compressed_tarball, '--rm', '-T0', tarball]
         subprocess.run(zstd_cmd, check=True)
 
+        if 'GITHUB_ACTIONS' in os.environ and os.environ.get('RELEASE') == 'true':
+            tag = self.install_folder.name
+            gh_cmd = [
+                'gh',
+                '-R', 'nathanchance/continuous-integration3',
+                'release', 'create',
+                '--notes', str(compressed_tarball.name),
+                tag,
+                compressed_tarball
+            ]  # fmt: skip
+            print(f"[+] Uploading {compressed_tarball} to GitHub release {tag}")
+            print(f"$ {' '.join(map(str, gh_cmd))}")
+
     def run(self) -> None:
         self._runner_setup()
         self._stage_one()
