@@ -585,12 +585,9 @@ class LLVMRunner:
             shutil.rmtree(runner.build_dir)
 
     def _stage_two(self) -> None:
-        print(
-            f"[+] Building final toolchain using BOLT and PGO and installing into {self.install_folder}"
-        )
+        print(f"[+] Building final toolchain using PGO and installing into {self.install_folder}")
         stage_two_tc_cmd = [
             *self.base_build_llvm_cmd,
-            '--bolt',
             '--install-folder', self.install_folder,
             '--pgo', 'kernel-defconfig-slim',
         ]  # fmt: skip
@@ -624,6 +621,7 @@ class LLVMRunner:
             ]  # fmt: skip
             print(f"[+] Uploading {compressed_tarball} to GitHub release {tag}")
             print(f"$ {' '.join(map(str, gh_cmd))}")
+            subprocess.run(gh_cmd, check=True)
 
     def run(self) -> None:
         self._runner_setup()
