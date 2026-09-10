@@ -169,6 +169,7 @@ def update_boot_utils_assets() -> None:
 
 def setup_srv_http() -> None:
     update_korg_llvm()
+    update_ci3_llvm()
     update_boot_utils_assets()
 
 
