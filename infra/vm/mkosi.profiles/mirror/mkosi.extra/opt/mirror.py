@@ -123,12 +123,13 @@ def update_ci3_llvm() -> None:
     asset = json.loads(releases_json_txt)['assets'][0]
 
     if not (tarball := Path(HTTP_DIR, 'toolchains/prerelease', asset['name'])).exists():
-        print(f"[+] Fetching {tarball} from GitHub")
+        print(f"[+] Fetching {tarball.name} from GitHub")
+        tarball.parent.mkdir(exist_ok=True, parents=True)
         subprocess.run(['curl', '-fLSs', '-o', tarball, asset['browser_download_url']], check=True)
 
     print('[+] Ensuring latest.txt is up to date')
     with tarball.parent.joinpath('latest.txt').open('w', encoding='utf-8') as f:
-        f.write(f"{tarball}\n")
+        f.write(f"{tarball.name}\n")
 
 
 def update_boot_utils_assets() -> None:
