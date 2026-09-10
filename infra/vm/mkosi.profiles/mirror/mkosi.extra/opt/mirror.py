@@ -128,8 +128,7 @@ def update_ci3_llvm() -> None:
 
     print('[+] Ensuring latest.txt is up to date')
     with tarball.parent.joinpath('latest.txt').open('w', encoding='utf-8') as f:
-        tarball_as_url = tarball.as_posix().replace(HTTP_DIR.as_posix(), f"http://{MIRROR_IP}:8080")
-        f.write(f"{tarball_as_url}\n")
+        f.write(f"{tarball}\n")
 
 
 def update_boot_utils_assets() -> None:
