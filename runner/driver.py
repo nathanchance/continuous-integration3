@@ -326,23 +326,23 @@ class KernelRunner:
 
         # Fetch latest available toolchains from mirror VM
         if self.llvm_version == CURRENT_LLVM_MAIN_VER:
-            result = requests.get(f"{MIRROR_HTTP}/toolchains/prerelease/latest.txt", timeout=15)
+            http_subdir = f"{MIRROR_HTTP}/toolchains/prerelease"
+            result = requests.get(f"{http_subdir}/latest.txt", timeout=15)
             result.raise_for_status()
-
-            tar_url = result.text.strip()
-            toolchain_tarball = tar_url.rsplit('/', 1)[1]
+            toolchain_tarball = result.text.strip()
         else:
-            result = requests.get(f"{MIRROR_HTTP}/toolchains/latest_llvm_releases.json", timeout=15)
+            http_subdir = f"{MIRROR_HTTP}/toolchains"
+            result = requests.get(f"{http_subdir}/latest_llvm_releases.json", timeout=15)
             result.raise_for_status()
-
             if not (toolchain_tarball := result.json().get(str(self.llvm_version))):
                 msg = f"LLVM {self.llvm_version} requested but not in latest_llvm_releases.json?"
                 raise RuntimeError(msg)
-            tar_url = f"{MIRROR_HTTP}/toolchains/{toolchain_tarball}"
+
         comp_ext = toolchain_tarball.rsplit('.', 1)[1]
+        self.toolchain_prefix = Path('/', toolchain_tarball.replace(f".tar.{comp_ext}", ''))
 
         # Download and extract toolchain into build container
-        self.toolchain_prefix = Path('/', toolchain_tarball.replace(f".tar.{comp_ext}", ''))
+        tar_url = f"{http_subdir}/{toolchain_tarball}"
         print(f"[+] Downloading {tar_url}", end='', flush=True)
         start = time.time()
         result = requests.get(tar_url, timeout=15)
