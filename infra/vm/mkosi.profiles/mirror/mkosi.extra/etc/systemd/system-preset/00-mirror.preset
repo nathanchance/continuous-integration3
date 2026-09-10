@@ -1,6 +1,6 @@
 enable enable-linger@.service registry
 enable every-15-minutes@.timer grok-dumb-pull@srv-git-boot\x2dutils.git grok-dumb-pull@srv-git-llvm\x2dproject.git grok-dumb-pull@srv-git-tc\x2dbuild.git
-enable every-six-hours@.timer update-http-mirror@korg-llvm update-http-mirror@boot-utils-assets update-opt-mirror-py
+enable every-six-hours@.timer update-http-mirror@llvm update-http-mirror@boot-utils-assets update-opt-mirror-py
 enable git-daemon.socket
 enable grok-fsck@.timer grokmirror
 enable grok-pull@.service grokmirror

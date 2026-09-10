@@ -26,7 +26,7 @@ def parse_arguments():
 
     update_parser = subparsers.add_parser('update', help='Update various files')
     update_parser.add_argument(
-        'item', choices=('korg-llvm', 'boot-utils-assets', 'self'), help='Item to update'
+        'item', choices=('llvm', 'boot-utils-assets', 'self'), help='Item to update'
     )
 
     subparsers.add_parser('prune', help=f"Prune {HTTP_DIR} of old, unneeded artifacts")
@@ -106,6 +106,30 @@ def update_korg_llvm() -> None:
         subprocess.run(['curl', '-fLSs', '-o', tarball_dst, tarball_url], check=True)
 
     shutil.move(llvm_releases_json, llvm_releases_json.with_suffix(''))
+
+
+def update_ci3_llvm() -> None:
+    print('[+] Fetching latest prerelease toolchain information')
+    releases_json_txt = subprocess.run(
+        [
+            'curl',
+            '-fLSs',
+            'https://api.github.com/repos/nathanchance/continuous-integration3/releases/latest',
+        ],
+        capture_output=True,
+        check=True,
+        text=True,
+    ).stdout
+    asset = json.loads(releases_json_txt)['assets'][0]
+
+    if not (tarball := Path(HTTP_DIR, 'toolchains/prerelease', asset['name'])).exists():
+        print(f"[+] Fetching {tarball} from GitHub")
+        subprocess.run(['curl', '-fLSs', '-o', tarball, asset['browser_download_url']], check=True)
+
+    print('[+] Ensuring latest.txt is up to date')
+    with tarball.parent.joinpath('latest.txt').open('w', encoding='utf-8') as f:
+        tarball_as_url = tarball.as_posix().replace(HTTP_DIR.as_posix(), f"http://{MIRROR_IP}:8080")
+        f.write(f"{tarball_as_url}\n")
 
 
 def update_boot_utils_assets() -> None:
@@ -191,8 +215,9 @@ def main():
         setup_srv_http()
 
     if args.action == 'update':
-        if args.item == 'korg-llvm':
+        if args.item == 'llvm':
             update_korg_llvm()
+            update_ci3_llvm()
         if args.item == 'boot-utils-assets':
             update_boot_utils_assets()
         if args.item == 'self':
