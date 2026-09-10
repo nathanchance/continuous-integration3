@@ -635,6 +635,8 @@ class LLVMRunner:
                 'gh',
                 '-R', 'nathanchance/continuous-integration3',
                 'release', 'create',
+                # use first commit as tag target to avoid cluttering git log
+                '--target', 'd3fffe77f98816a392cf8115c0d8a3d087bb2231',
                 '--title', f"LLVM {self.llvm_version} @ {self.llvm_revision}",
                 '--notes', f"https://github.com/llvm/llvm-project/commits/{self.llvm_revision}",
                 tag,
