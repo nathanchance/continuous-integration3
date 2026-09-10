@@ -26,7 +26,8 @@ import tuxmake.build
 MIRROR_GIT = 'git://192.168.122.2'
 MIRROR_HTTP = f"{MIRROR_GIT.replace('git', 'http')}:8080"
 
-VALID_LLVM_VERS = tuple(range(23, 21, -1))
+CURRENT_LLVM_MAIN_VER = 24
+VALID_LLVM_VERS = tuple(range(CURRENT_LLVM_MAIN_VER, 21, -1))
 VALID_STABLE_VERS = ('7.2',)
 VALID_TREES = ('linux', 'linux-next', *[f"linux-stable-{ver}" for ver in VALID_STABLE_VERS])
 
@@ -324,15 +325,24 @@ class KernelRunner:
             return
 
         # Fetch latest available toolchains from mirror VM
-        result = requests.get(f"{MIRROR_HTTP}/toolchains/latest_llvm_releases.json", timeout=15)
-        result.raise_for_status()
-        if not (toolchain_tarball := result.json().get(str(self.llvm_version))):
-            msg = f"LLVM {self.llvm_version} requested but not in latest_llvm_releases.json?"
-            raise RuntimeError(msg)
+        if self.llvm_version == CURRENT_LLVM_MAIN_VER:
+            result = requests.get(f"{MIRROR_HTTP}/toolchains/prerelease/latest.txt", timeout=15)
+            result.raise_for_status()
+
+            tar_url = result.text.strip()
+            toolchain_tarball = tar_url.rsplit('/', 1)[1]
+        else:
+            result = requests.get(f"{MIRROR_HTTP}/toolchains/latest_llvm_releases.json", timeout=15)
+            result.raise_for_status()
+
+            if not (toolchain_tarball := result.json().get(str(self.llvm_version))):
+                msg = f"LLVM {self.llvm_version} requested but not in latest_llvm_releases.json?"
+                raise RuntimeError(msg)
+            tar_url = f"{MIRROR_HTTP}/toolchains/{toolchain_tarball}"
+        comp_ext = toolchain_tarball.rsplit('.', 1)[1]
 
         # Download and extract toolchain into build container
-        self.toolchain_prefix = Path('/', toolchain_tarball.replace('.tar.xz', ''))
-        tar_url = f"{MIRROR_HTTP}/toolchains/{toolchain_tarball}"
+        self.toolchain_prefix = Path('/', toolchain_tarball.replace(f".tar.{comp_ext}", ''))
         print(f"[+] Downloading {tar_url}", end='', flush=True)
         start = time.time()
         result = requests.get(tar_url, timeout=15)
