@@ -493,6 +493,8 @@ class LLVMRunner:
         self.tc_build = Path('/tc-build')
 
         self.install_folder: Path = Path()
+        self.llvm_version: str = ''
+        self.llvm_revision: str = ''
 
         check_targets = [
             'clang',
@@ -542,9 +544,9 @@ class LLVMRunner:
 
         cmake_txt = Path(self.llvm, 'cmake/Modules/LLVMVersion.cmake').read_text(encoding='utf-8')
         llvm_ver_tuple = tuple(re.findall(r"\s+set\(LLVM_VERSION_[A-Z]+ ([0-9]+)\)", cmake_txt))
-        llvm_ver_str = '.'.join(llvm_ver_tuple)
+        self.llvm_version = '.'.join(llvm_ver_tuple)
         if len(llvm_ver_tuple) != 3:
-            msg = f"Malformed LLVM version found? {llvm_ver_str}"
+            msg = f"Malformed LLVM version found? {self.llvm_version}"
             raise RuntimeError(msg)
 
         base_tag = f"llvmorg-{llvm_ver_tuple[0]}-init"
@@ -554,10 +556,17 @@ class LLVMRunner:
         if left != '0':
             msg = f"HEAD is not a decendent of {base_tag}?"
             raise RuntimeError(msg)
-        head_sha = llvm_repo.git_quiet(['show', '-s', '--format=%H']).stdout.strip()
+        self.llvm_revision = llvm_repo.git_quiet(['show', '-s', '--format=%H']).stdout.strip()
         date_time = datetime.datetime.now().astimezone().strftime('%Y%m%d-%H%M%S')
 
-        install_name_parts = ['llvm', llvm_ver_str, right, head_sha, date_time, platform.machine()]
+        install_name_parts = [
+            'llvm',
+            self.llvm_version,
+            right,
+            self.llvm_revision,
+            date_time,
+            platform.machine(),
+        ]
         self.install_folder = Path('/install', '-'.join(install_name_parts))
 
     def _stage_one(self) -> None:
@@ -616,7 +625,8 @@ class LLVMRunner:
                 'gh',
                 '-R', 'nathanchance/continuous-integration3',
                 'release', 'create',
-                '--notes', str(compressed_tarball.name),
+                '--title', f"LLVM {self.llvm_version} @ {self.llvm_revision}",
+                '--notes', f"https://github.com/llvm/llvm-project/commits/{self.llvm_revision}",
                 tag,
                 compressed_tarball
             ]  # fmt: skip
