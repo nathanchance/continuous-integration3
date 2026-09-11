@@ -1,0 +1,89 @@
+diff --git b/clang/docs/ReleaseNotes.md a/clang/docs/ReleaseNotes.md
+index 3cca316a91d4..0f6b4141811f 100644
+--- b/clang/docs/ReleaseNotes.md
++++ a/clang/docs/ReleaseNotes.md
+@@ -490,9 +490,6 @@ features cannot lower the translation-unit ABI level;
+   dimension that is a zero integer constant, as in `struct Empty vla[n]` or
+   `int vla[n][0]`. (#GH28328)
+ 
+-- Fixed a missing `-Wconstant-conversion` diagnostic for signed `char` arrays.
+-  (#GH181730)
+-
+ ### Improvements to Clang's time-trace
+ 
+ ### Improvements to Coverage Mapping
+diff --git b/clang/lib/Sema/SemaChecking.cpp a/clang/lib/Sema/SemaChecking.cpp
+index 7374ce7404cb..0e85af73696d 100644
+--- b/clang/lib/Sema/SemaChecking.cpp
++++ a/clang/lib/Sema/SemaChecking.cpp
+@@ -13268,8 +13268,7 @@ static void DiagnoseNullConversion(Sema &S, Expr *E, QualType T,
+ }
+ 
+ // Helper function to filter out cases for constant width constant conversion.
+-// Don't warn on unsigned char array initialization or for non-decimal
+-// values.
++// Don't warn on char array initialization or for non-decimal values.
+ static bool isSameWidthConstantConversion(Sema &S, Expr *E, QualType T,
+                                           SourceLocation CC) {
+   // If initializing from a constant, and the constant starts with '0',
+@@ -13282,9 +13281,9 @@ static bool isSameWidthConstantConversion(Sema &S, Expr *E, QualType T,
+       return false;
+   }
+ 
+-  // If the CC location points to a '{' and the type is an unsigned char
+-  // type, assume it is an array initialization.
+-  if (T->isCharType() && !T->isSignedIntegerType() && CC.isValid()) {
++  // If the CC location points to a '{', and the type is char, then assume
++  // assume it is an array initialization.
++  if (CC.isValid() && T->isCharType()) {
+     const char FirstContextCharacter =
+         S.getSourceManager().getCharacterData(CC)[0];
+     if (FirstContextCharacter == '{')
+diff --git b/clang/test/Sema/constant-conversion.c a/clang/test/Sema/constant-conversion.c
+index adba3315cc9b..ffc25b9cc497 100644
+--- b/clang/test/Sema/constant-conversion.c
++++ a/clang/test/Sema/constant-conversion.c
+@@ -1,6 +1,5 @@
+-// RUN: %clang_cc1 -fsyntax-only -ffreestanding -verify=expected,signed-plain-char,one-bit -triple x86_64-apple-darwin %s
+-// RUN: %clang_cc1 -fsyntax-only -ffreestanding -Wno-single-bit-bitfield-constant-conversion -verify=expected,signed-plain-char -triple x86_64-apple-darwin %s
+-// RUN: %clang_cc1 -fsyntax-only -ffreestanding -Wno-single-bit-bitfield-constant-conversion -verify -triple x86_64-apple-darwin -fno-signed-char %s
++// RUN: %clang_cc1 -fsyntax-only -ffreestanding -verify=expected,one-bit -triple x86_64-apple-darwin %s
++// RUN: %clang_cc1 -fsyntax-only -ffreestanding -Wno-single-bit-bitfield-constant-conversion -verify -triple x86_64-apple-darwin %s
+ 
+ #include <stdbool.h>
+ 
+@@ -104,7 +103,7 @@ void test9(void) {
+   const int max_short_plus_one = (int)max_short + 1;
+   const long max_int_plus_one = (long)max_int + 1;
+ 
+-  char new_char = max_char_plus_one;  // signed-plain-char-warning {{implicit conversion from 'const short' to 'char' changes value from 128 to -128}}
++  char new_char = max_char_plus_one;  // expected-warning {{implicit conversion from 'const short' to 'char' changes value from 128 to -128}}
+   short new_short = max_short_plus_one;  // expected-warning {{implicit conversion from 'const int' to 'short' changes value from 32768 to -32768}}
+   int new_int = max_int_plus_one;  // expected-warning {{implicit conversion from 'const long' to 'int' changes value from 2147483648 to -2147483648}}
+ 
+@@ -123,19 +122,9 @@ void test9(void) {
+ #define CHAR_MACRO_HEX 0xff
+   char macro_char_hex = CHAR_MACRO_HEX;
+ #define CHAR_MACRO_DEC 255
+-  char macro_char_dec = CHAR_MACRO_DEC;  // signed-plain-char-warning {{implicit conversion from 'int' to 'char' changes value from 255 to -1}}
+-
+-  char array_init[] = { 255 }; // signed-plain-char-warning {{implicit conversion from 'int' to 'char' changes value from 255 to -1}}
+-  unsigned char unsigned_array_init[] = { 255 };
+-  unsigned char unsigned_array_init_multi[] = { 255, 127, 128, 129, 0 };
+-  signed char signed_array_init[] = { 255 }; // expected-warning {{implicit conversion from 'int' to 'signed char' changes value from 255 to -1}}
+-  signed char signed_array_init_multi[] = {
+-    255, // expected-warning {{implicit conversion from 'int' to 'signed char' changes value from 255 to -1}}
+-    127,
+-    128, // expected-warning {{implicit conversion from 'int' to 'signed char' changes value from 128 to -128}}
+-    129, // expected-warning {{implicit conversion from 'int' to 'signed char' changes value from 129 to -127}}
+-    0
+-  };
++  char macro_char_dec = CHAR_MACRO_DEC;  // expected-warning {{implicit conversion from 'int' to 'char' changes value from 255 to -1}}
++
++  char array_init[] = { 255, 127, 128, 129, 0 };
+ }
+ 
+ #define A 1
+-- 
+2.55.0
+
