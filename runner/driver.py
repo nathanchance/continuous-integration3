@@ -110,15 +110,27 @@ class MirrorRepo:
             'git',
             '-c', 'advice.detachedHead=false',
             'clone',
-            f"--revision={self.revision}" if self.revision else f"--branch={self.branch}",
             '--quiet',
         ]  # fmt: skip
+        needs_switch = False
+        if self.revision:
+            git_clone_help = subprocess.run(
+                ['git', 'clone', '--help'], capture_output=True, check=True, text=True
+            ).stdout
+            if '--revision' in git_clone_help:
+                git_clone_cmd.append(f"--revision={self.revision}")
+            else:
+                needs_switch = True
+        else:
+            git_clone_cmd += [f"--branch={self.branch}", '--single-branch']
         if extra_clone_args:
             git_clone_cmd.extend(extra_clone_args)
         if shallow:
             git_clone_cmd.append('--depth=1')
         subprocess.run([*git_clone_cmd, self.remote_path, self.local_path], check=True)
         print(f" [duration: {get_duration(start)}]", flush=True)
+        if needs_switch:
+            self.git(['switch', '-d', self.revision])
 
         head_info = self.git_quiet(['show', '-s', '--format=%H ("%s", %cs)']).stdout.strip()
         branch = self.git_quiet(['rev-parse', '--abbrev-ref', 'HEAD']).stdout.strip()
@@ -561,7 +573,7 @@ class LLVMRunner:
 
     def _runner_setup(self) -> None:
         llvm_repo = MirrorRepo('llvm-project', local_path=self.llvm, revision=self.llvm_revision)
-        llvm_repo.clone(shallow=False, extra_clone_args=['--single-branch', '--tags'])
+        llvm_repo.clone(shallow=False, extra_clone_args=['--tags'])
         # set origin to upstream url, as it is visible in the version string
         llvm_repo.git(['remote', 'set-url', 'origin', 'https://github.com/llvm/llvm-project.git'])
         for patch in self.llvm_patches:
