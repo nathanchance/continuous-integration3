@@ -6,6 +6,10 @@ on:
         description: 'Push toolchain as a release'
         required: false
         type: boolean
+      revision:
+        description: 'Revision to build from'
+        required: false
+        type: string
 permissions: read-all
 jobs:
   build_llvm:
@@ -18,7 +22,7 @@ jobs:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build and release LLVM
-      run: podman run --env GH_TOKEN --env GITHUB_ACTIONS --env RELEASE --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-llvm-build-env:latest /work/runner/driver.py llvm-build
+      run: podman run --env GH_TOKEN --env GITHUB_ACTIONS --env RELEASE --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-llvm-build-env:latest /work/runner/driver.py llvm-build ${{ github.event.inputs.revision && format('-r {0}', github.event.inputs.revision) || '' }}
       timeout-minutes: 480
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
