@@ -23,6 +23,8 @@ from typing import Any
 import requests
 import tuxmake.build
 
+CI_ROOT = WORK if (WORK := Path('/work')).exists() else Path(__file__).resolve().parents[1]
+
 MIRROR_GIT = 'git://192.168.122.2'
 MIRROR_HTTP = f"{MIRROR_GIT.replace('git', 'http')}:8080"
 
@@ -69,10 +71,8 @@ class MirrorRepo:
             for item in ('boot-utils', 'llvm-project', 'tc-build')
         }
 
-        ci_root = work if (work := Path('/work')).exists() else Path(__file__).resolve().parents[1]
-
         # Set this before normalization below
-        self.patches_dir = Path(ci_root, 'patches', tree)
+        self.patches_dir = Path(CI_ROOT, 'patches', tree)
 
         # Normalize 'linux-stable-x.y' into 'linux-stable' tree with 'linux-x.y' branch
         if tree.startswith('linux-stable'):
@@ -563,6 +563,10 @@ class LLVMRunner:
         llvm_repo.clone(shallow=False, extra_clone_args=['--single-branch', '--tags'])
         # set origin to upstream url, as it is visible in the version string
         llvm_repo.git(['remote', 'set-url', 'origin', 'https://github.com/llvm/llvm-project.git'])
+        if patches := list(Path(CI_ROOT, 'patches/llvm-project').iterdir()):
+            for patch in patches:
+                print(f"[+] Applying {patch.name}")
+                llvm_repo.git(['apply', '-3v', patch])
 
         cmake_txt = Path(self.llvm, 'cmake/Modules/LLVMVersion.cmake').read_text(encoding='utf-8')
         llvm_ver_tuple = tuple(re.findall(r"\s+set\(LLVM_VERSION_[A-Z]+ ([0-9]+)\)", cmake_txt))
