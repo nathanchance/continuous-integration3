@@ -203,7 +203,14 @@ def parse_arguments():
         '-v', '--verbose', action='store_true', help='Perform verbose build in tuxmake'
     )
 
-    subparsers.add_parser('llvm-build', help='Perform a LLVM build via build-llvm.py')
+    llvm_build_parser = subparsers.add_parser(
+        'llvm-build', help='Perform a LLVM build via build-llvm.py'
+    )
+    llvm_build_parser.add_argument(
+        '-r',
+        '--revision',
+        help='Revision to clone llvm-project repository at (must be full length)',
+    )
 
     gen_rev_parser = subparsers.add_parser(
         'generate-revision',
@@ -221,7 +228,12 @@ def parse_arguments():
         'tree', choices=VALID_TREES, help='Tree to apply patches to'
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    if args.action == 'llvm-build' and args.revision and len(args.revision) != 40:
+        parser.error('Revision must be a full SHA (40 characters long)!')
+
+    return args
 
 
 def register_problem_matchers() -> None:
@@ -547,7 +559,7 @@ class LLVMRunner:
             os.environ['LIT_OPTS'] = '-sv --no-progress-bar'
 
     def _runner_setup(self) -> None:
-        llvm_repo = MirrorRepo('llvm-project', local_path=self.llvm)
+        llvm_repo = MirrorRepo('llvm-project', local_path=self.llvm, revision=self.llvm_revision)
         llvm_repo.clone(shallow=False, extra_clone_args=['--single-branch', '--tags'])
         # set origin to upstream url, as it is visible in the version string
         llvm_repo.git(['remote', 'set-url', 'origin', 'https://github.com/llvm/llvm-project.git'])
@@ -566,7 +578,8 @@ class LLVMRunner:
         if left != '0':
             msg = f"HEAD is not a decendent of {base_tag}?"
             raise RuntimeError(msg)
-        self.llvm_revision = llvm_repo.git_quiet(['show', '-s', '--format=%H']).stdout.strip()
+        if not self.llvm_revision:
+            self.llvm_revision = llvm_repo.git_quiet(['show', '-s', '--format=%H']).stdout.strip()
         date_time = datetime.datetime.now().astimezone().strftime('%Y%m%d-%H%M%S')
 
         install_name_parts = [
@@ -696,7 +709,10 @@ def main() -> None:
     if args.action == 'llvm-build':
         assert_container_env()
 
-        LLVMRunner().run()
+        llvm_runner = LLVMRunner()
+        if args.revision:
+            llvm_runner.llvm_revision = args.revision
+        llvm_runner.run()
 
     if args.action == 'generate-revision':
         MirrorRepo(args.tree).gen_revision()
