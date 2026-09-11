@@ -110,6 +110,7 @@ class MirrorRepo:
             'git',
             '-c', 'advice.detachedHead=false',
             'clone',
+            '--single-branch',
             '--quiet',
         ]  # fmt: skip
         needs_switch = False
@@ -122,7 +123,7 @@ class MirrorRepo:
             else:
                 needs_switch = True
         else:
-            git_clone_cmd += [f"--branch={self.branch}", '--single-branch']
+            git_clone_cmd.append(f"--branch={self.branch}")
         if extra_clone_args:
             git_clone_cmd.extend(extra_clone_args)
         if shallow:
