@@ -517,6 +517,7 @@ class LLVMRunner:
         self.install_folder: Path = Path()
         self.llvm_version: str = ''
         self.llvm_revision: str = ''
+        self.llvm_patches: list[Path] = list(Path(CI_ROOT, 'patches/llvm-project').iterdir())
 
         check_targets = [
             'clang',
@@ -563,10 +564,9 @@ class LLVMRunner:
         llvm_repo.clone(shallow=False, extra_clone_args=['--single-branch', '--tags'])
         # set origin to upstream url, as it is visible in the version string
         llvm_repo.git(['remote', 'set-url', 'origin', 'https://github.com/llvm/llvm-project.git'])
-        if patches := list(Path(CI_ROOT, 'patches/llvm-project').iterdir()):
-            for patch in patches:
-                print(f"[+] Applying {patch.name}")
-                llvm_repo.git(['apply', '-3v', patch])
+        for patch in self.llvm_patches:
+            print(f"[+] Applying {patch.name}")
+            llvm_repo.git(['apply', '-3v', patch])
 
         cmake_txt = Path(self.llvm, 'cmake/Modules/LLVMVersion.cmake').read_text(encoding='utf-8')
         llvm_ver_tuple = tuple(re.findall(r"\s+set\(LLVM_VERSION_[A-Z]+ ([0-9]+)\)", cmake_txt))
@@ -648,6 +648,18 @@ class LLVMRunner:
 
         if 'GITHUB_ACTIONS' in os.environ and os.environ.get('RELEASE') == 'true':
             tag = self.install_folder.name
+            notes = [f"https://github.com/llvm/llvm-project/commits/{self.llvm_revision}"]
+
+            ci_repo_sha = subprocess.run(
+                ['git', '-C', CI_ROOT, 'show', '-s', '--format=%H'],
+                capture_output=True,
+                check=True,
+                text=True,
+            ).stdout.strip()
+            notes += [
+                f"[{item.name}](https://github.com/nathanchance/continuous-integration3/raw/{ci_repo_sha}/patches/llvm-project/{item.name})"
+                for item in self.llvm_patches
+            ]
             gh_cmd = [
                 'gh',
                 '-R', 'nathanchance/continuous-integration3',
@@ -655,7 +667,7 @@ class LLVMRunner:
                 # use first commit as tag target to avoid cluttering git log
                 '--target', 'd3fffe77f98816a392cf8115c0d8a3d087bb2231',
                 '--title', f"LLVM {self.llvm_version} @ {self.llvm_revision}",
-                '--notes', f"https://github.com/llvm/llvm-project/commits/{self.llvm_revision}",
+                '--notes', '\n'.join(notes),
                 tag,
                 compressed_tarball
             ]  # fmt: skip
