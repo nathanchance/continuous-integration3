@@ -21,6 +21,7 @@ class Workflow:
         'podman', 'run',
         '--env', 'GITHUB_ACTIONS',
         '--env', 'GITHUB_WORKSPACE',
+        '--pids-limit', '-1',  # ensure ld.lld can always spawn threads
         '--pull', 'newer',
         '--rm',
         '--tty',
