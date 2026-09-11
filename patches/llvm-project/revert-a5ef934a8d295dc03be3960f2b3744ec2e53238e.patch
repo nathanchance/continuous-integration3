@@ -1,17 +1,3 @@
-diff --git b/clang/docs/ReleaseNotes.md a/clang/docs/ReleaseNotes.md
-index 3cca316a91d4..0f6b4141811f 100644
---- b/clang/docs/ReleaseNotes.md
-+++ a/clang/docs/ReleaseNotes.md
-@@ -490,9 +490,6 @@ features cannot lower the translation-unit ABI level;
-   dimension that is a zero integer constant, as in `struct Empty vla[n]` or
-   `int vla[n][0]`. (#GH28328)
- 
--- Fixed a missing `-Wconstant-conversion` diagnostic for signed `char` arrays.
--  (#GH181730)
--
- ### Improvements to Clang's time-trace
- 
- ### Improvements to Coverage Mapping
 diff --git b/clang/lib/Sema/SemaChecking.cpp a/clang/lib/Sema/SemaChecking.cpp
 index 7374ce7404cb..0e85af73696d 100644
 --- b/clang/lib/Sema/SemaChecking.cpp
