@@ -376,11 +376,15 @@ class KernelRunner:
 
         print(f"[+] Extracting {toolchain_tarball} to {self.toolchain_prefix}", end='', flush=True)
         start = time.time()
-        subprocess.run(
-            ['tar', '-C', self.toolchain_prefix.parent, '-f', '-', '-J', '-x'],
-            check=True,
-            input=result.content,
-        )
+        comp_tar_flag = {'xz': '-J', 'zst': '--zstd'}
+        tar_cmd = [
+            'tar',
+            '-C', self.toolchain_prefix.parent,
+            '-f', '-',
+            comp_tar_flag.get(comp_ext, '--auto'),
+            '-x'
+        ]  # fmt: skip
+        subprocess.run(tar_cmd, check=True, input=result.content)
         print(f" [duration: {get_duration(start)}]", flush=True)
 
     def _prepare_git(self) -> None:
