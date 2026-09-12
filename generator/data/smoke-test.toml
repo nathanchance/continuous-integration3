@@ -1,11 +1,12 @@
 tree = "linux"
-llvm_version = "23"
-pretty-name = "smoke test (linux / LLVM 23)"
+llvm_version = "24"
+pretty-name = "smoke test (linux / LLVM 24)"
 output-name = "smoke-test"
 builds = [
     { arch = "arm", kconfigs = [ "multi_v5_defconfig" ] },
     { arch = "arm", kconfigs = [ "aspeed_g5_defconfig" ] },
     { arch = "arm", kconfigs = [ "multi_v7_defconfig" ] },
+    { arch = "arm", boot = false, kconfigs = [ "allmodconfig" ] },
 
     { arch = "arm64", kconfigs = [ "defconfig" ] },
     { arch = "arm64", boot = false, kconfigs = [ "allmodconfig" ] },
@@ -21,6 +22,7 @@ builds = [
     { arch = "powerpc", kconfigs = [ "powernv_defconfig" ] },
 
     { arch = "riscv", kconfigs = [ "defconfig" ] },
+    { arch = "riscv", boot = false, kconfigs = [ "allmodconfig" ] },
 
     { arch = "s390", kconfigs = [ "defconfig" ] },
 

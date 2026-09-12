@@ -1,7 +1,7 @@
 # DO NOT MODIFY MANUALLY!
 # Regenerate with:
 # $ generator/generate.py
-name: smoke test (linux / LLVM 23)
+name: smoke test (linux / LLVM 24)
 'on': workflow_dispatch
 permissions: read-all
 jobs:
@@ -20,7 +20,7 @@ jobs:
       run: runner/driver.py generate-revision linux
     - name: Check that patches apply to linux
       run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py check-patch-application -r ${{ steps.genrev.outputs.revision }} linux
-  _c33815c590ffb45154871cd91716e3cb2bdb6465adb978d0879b6835f4b3ec12:
+  _000850dbe8550978e15a9104330fd4b3f0861aa8d9e7a6f967a68368b9146788:
     name: arm multi_v5_defconfig
     runs-on:
     - self-hosted
@@ -31,8 +31,8 @@ jobs:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build and boot arm multi_v5_defconfig
-      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a arm -b -k multi_v5_defconfig -l 23 -t linux -r ${{ needs.initial_checks.outputs.revision }}
-  _633fddc7187688ff0630632bc0df107788c9288495a01b85ab575c6a7f34659d:
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a arm -b -k multi_v5_defconfig -l 24 -t linux -r ${{ needs.initial_checks.outputs.revision }}
+  _6b957078db2dc4cee46050720d033be0220ef486c755cbdb89d158d2d42f67bb:
     name: arm aspeed_g5_defconfig
     runs-on:
     - self-hosted
@@ -43,8 +43,8 @@ jobs:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build and boot arm aspeed_g5_defconfig
-      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a arm -b -k aspeed_g5_defconfig -l 23 -t linux -r ${{ needs.initial_checks.outputs.revision }}
-  _1ded9f84efcd07c9eaad9625be201d61ff058ec2a8f5db9dd0147269131836c0:
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a arm -b -k aspeed_g5_defconfig -l 24 -t linux -r ${{ needs.initial_checks.outputs.revision }}
+  _8382f60990942cdbd7e02d00955984c6da331f9aaffe8fbb5e1ecc9813a12a7e:
     name: arm multi_v7_defconfig
     runs-on:
     - self-hosted
@@ -55,8 +55,20 @@ jobs:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build and boot arm multi_v7_defconfig
-      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a arm -b -k multi_v7_defconfig -l 23 -t linux -r ${{ needs.initial_checks.outputs.revision }}
-  _0b7439f2af7e2c672453d8b320299b025b6f905637b2fc871c4c77f967c52424:
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a arm -b -k multi_v7_defconfig -l 24 -t linux -r ${{ needs.initial_checks.outputs.revision }}
+  _e04878417c5965d1396081acd80c499b9835db7a80ac5b3d69a1bd02c734f0e5:
+    name: arm allmodconfig
+    runs-on:
+    - self-hosted
+    - big
+    needs:
+    - initial_checks
+    steps:
+    - name: Clone continuous-integration3
+      uses: actions/checkout@v7
+    - name: Build arm allmodconfig
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a arm -k allmodconfig -l 24 -t linux -r ${{ needs.initial_checks.outputs.revision }}
+  _04db981f0be9528d0fcc231e45fcd25b4dd044773b3e335eb7c900224b12da8f:
     name: arm64 defconfig
     runs-on:
     - self-hosted
@@ -67,8 +79,8 @@ jobs:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build and boot arm64 defconfig
-      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a arm64 -b -k defconfig -l 23 -t linux -r ${{ needs.initial_checks.outputs.revision }}
-  _5f8dcb3a647df45e768b25086398985bc3454d5726a80b38a24728c6c2fee63c:
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a arm64 -b -k defconfig -l 24 -t linux -r ${{ needs.initial_checks.outputs.revision }}
+  _d234fbdac5e89fe8aa59be961f60c592e25bd2e87db6ab360a76a9cd62f3d41d:
     name: arm64 allmodconfig
     runs-on:
     - self-hosted
@@ -79,8 +91,8 @@ jobs:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build arm64 allmodconfig
-      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a arm64 -k allmodconfig -l 23 -t linux -r ${{ needs.initial_checks.outputs.revision }}
-  _cbc7dad9cb3fba300618c09813e0f311aab50914192f9e0b512dfa939852d631:
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a arm64 -k allmodconfig -l 24 -t linux -r ${{ needs.initial_checks.outputs.revision }}
+  _5415ed0df49dfd80f1f7540ee14471ad082d00dbf1d5f0b69487d28b6f0e90cc:
     name: i386 defconfig
     runs-on:
     - self-hosted
@@ -91,8 +103,8 @@ jobs:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build and boot i386 defconfig
-      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a i386 -b -k defconfig -l 23 -t linux -r ${{ needs.initial_checks.outputs.revision }}
-  _1e252822f9d0dc88ef6babe266056236c685f943ae9f6e5d1d86c9ec80b1cb43:
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a i386 -b -k defconfig -l 24 -t linux -r ${{ needs.initial_checks.outputs.revision }}
+  _7c57dde9100ca3582de81a6c45774b0aaa458d8e08b1cf7fa32f8e09e869e03b:
     name: loongarch defconfig
     runs-on:
     - self-hosted
@@ -103,8 +115,8 @@ jobs:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build and boot loongarch defconfig
-      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a loongarch -b -k defconfig -l 23 -t linux -r ${{ needs.initial_checks.outputs.revision }}
-  _17d6b2d1bc76bebeec2cb126b478d96d189e7e4f71de2bf3f2a95b4e16819b04:
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a loongarch -b -k defconfig -l 24 -t linux -r ${{ needs.initial_checks.outputs.revision }}
+  _5b4d8f53098fcc2d46be2205c0eb86fb96efbf3c0a04b41a019c3e51c9e0ecb8:
     name: mips malta_defconfig
     runs-on:
     - self-hosted
@@ -115,8 +127,8 @@ jobs:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build and boot mips malta_defconfig
-      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a mips -b -k malta_defconfig -l 23 -t linux -r ${{ needs.initial_checks.outputs.revision }}
-  _0bc6dc94373a0679f2f89f18c84b621105e2e1e9b4d4ef55b8af20c51e27fbc7:
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a mips -b -k malta_defconfig -l 24 -t linux -r ${{ needs.initial_checks.outputs.revision }}
+  _823a9917f457abead703c229dbfa032fd31148e69f17c14af1a71ec04f40181e:
     name: mips malta_defconfig + CONFIG_CPU_BIG_ENDIAN=y
     runs-on:
     - self-hosted
@@ -127,8 +139,8 @@ jobs:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build and boot mips malta_defconfig + CONFIG_CPU_BIG_ENDIAN=y
-      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a mips -b -k malta_defconfig CONFIG_CPU_BIG_ENDIAN=y -l 23 -t linux -r ${{ needs.initial_checks.outputs.revision }}
-  _db0202a9feb8b057d532918ad4b2e16ce337f7a7722df20c82d452a77ebf9d30:
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a mips -b -k malta_defconfig CONFIG_CPU_BIG_ENDIAN=y -l 24 -t linux -r ${{ needs.initial_checks.outputs.revision }}
+  _bae7a7f1ab2de4213c676577cd13c4395eadcfde63087b55a96e0d12a70fe47c:
     name: powerpc ppc64_guest_defconfig
     runs-on:
     - self-hosted
@@ -139,8 +151,8 @@ jobs:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build and boot powerpc ppc64_guest_defconfig
-      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a powerpc -b -k ppc64_guest_defconfig -l 23 -t linux -r ${{ needs.initial_checks.outputs.revision }}
-  _15be43cff50a7c2c6ca18ad20dd09d64c08f6cf4453b48b359a1eda2730d47ac:
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a powerpc -b -k ppc64_guest_defconfig -l 24 -t linux -r ${{ needs.initial_checks.outputs.revision }}
+  _ae694732edf5c14c7df018df6b57ee0507ca702d3356df0e16bb4c4a58484614:
     name: powerpc powernv_defconfig
     runs-on:
     - self-hosted
@@ -151,8 +163,8 @@ jobs:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build and boot powerpc powernv_defconfig
-      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a powerpc -b -k powernv_defconfig -l 23 -t linux -r ${{ needs.initial_checks.outputs.revision }}
-  _e70913fe6b5a74dffcc46a94f2f695a0d4203f51ed27cea0a09a465e2e1b1f19:
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a powerpc -b -k powernv_defconfig -l 24 -t linux -r ${{ needs.initial_checks.outputs.revision }}
+  _0d8f60e61bb073d63c0480db8b8b4983b15cc428d2ffc1e8c64d645f0393db68:
     name: riscv defconfig
     runs-on:
     - self-hosted
@@ -163,8 +175,20 @@ jobs:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build and boot riscv defconfig
-      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a riscv -b -k defconfig -l 23 -t linux -r ${{ needs.initial_checks.outputs.revision }}
-  _bb2e8d396a127d4949b753cb7066bdad0c75e6e09d47b88ff03e12fdef5764b8:
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a riscv -b -k defconfig -l 24 -t linux -r ${{ needs.initial_checks.outputs.revision }}
+  _126883e08307ecf68bf1b17b006ee1093a0a6496d849079741c02ca563ed06a5:
+    name: riscv allmodconfig
+    runs-on:
+    - self-hosted
+    - big
+    needs:
+    - initial_checks
+    steps:
+    - name: Clone continuous-integration3
+      uses: actions/checkout@v7
+    - name: Build riscv allmodconfig
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a riscv -k allmodconfig -l 24 -t linux -r ${{ needs.initial_checks.outputs.revision }}
+  _84e874fd7d104b59f4f34da755547af3a6310b6c07b1eab656ac9c3cd14be08a:
     name: s390 defconfig
     runs-on:
     - self-hosted
@@ -175,8 +199,8 @@ jobs:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build and boot s390 defconfig
-      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a s390 -b -k defconfig -l 23 -t linux -r ${{ needs.initial_checks.outputs.revision }}
-  _d0f424578196a9e6a1da12d3d55f43c8743922119c6252db09bd3e2f082c3565:
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a s390 -b -k defconfig -l 24 -t linux -r ${{ needs.initial_checks.outputs.revision }}
+  _bca2b4f76b737e74e28a670b467b4490c32922b2b218026f58a13802451a785c:
     name: x86_64 defconfig
     runs-on:
     - self-hosted
@@ -187,8 +211,8 @@ jobs:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build and boot x86_64 defconfig
-      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a x86_64 -b -k defconfig -l 23 -t linux -r ${{ needs.initial_checks.outputs.revision }}
-  _53ab765d73df9657475bc50200f41ab4bc526ab0f501e9c460e2a6368f61c47f:
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a x86_64 -b -k defconfig -l 24 -t linux -r ${{ needs.initial_checks.outputs.revision }}
+  _f5fedea009b86cb541208b49e13cc17eea894e6ab759a1060077133317ba21e7:
     name: x86_64 allmodconfig
     runs-on:
     - self-hosted
@@ -199,4 +223,4 @@ jobs:
     - name: Clone continuous-integration3
       uses: actions/checkout@v7
     - name: Build x86_64 allmodconfig
-      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a x86_64 -k allmodconfig -l 23 -t linux -r ${{ needs.initial_checks.outputs.revision }}
+      run: podman run --env GITHUB_ACTIONS --env GITHUB_WORKSPACE --pids-limit -1 --pull newer --rm --tty --volume $GITHUB_WORKSPACE:/work:ro ghcr.io/nathanchance/ci3-kernel-build-env:latest /work/runner/driver.py kernel-build -a x86_64 -k allmodconfig -l 24 -t linux -r ${{ needs.initial_checks.outputs.revision }}
